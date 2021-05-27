@@ -1,11 +1,11 @@
 from flask import Blueprint, request
 from concurrent import futures
-from app.infra.bluetooth import scan
+from app.infra.bluetooth import scan_device
 
 route = Blueprint("bluetooth", __name__)
 
 
-@route.post('/bluetooth')
+@route.post('/bluetooth/scan')
 async def scan_bluetooth():
     """
     Bluetooth端末のMACアドレスから、そのデバイスが近くにいるかどうかを調べる。
@@ -31,11 +31,11 @@ async def scan_bluetooth():
         ]
     }
     """
-    addresses = request.json
+    addresses = request.json["devices"]
     future_list = []
     with futures.ThreadPoolExecutor() as executor:
         for address in addresses:
-            future = executor.submit(scan, address)
+            future = executor.submit(scan_device, address)
             future_list.append(future)
 
     results = []
