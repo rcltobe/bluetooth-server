@@ -1,8 +1,15 @@
 from flask import Blueprint, request
-from concurrent import futures
-from app.infra.bluetooth import scan_device
+from app.domain.service.bluetooth import BluetoothService
 
 route = Blueprint("bluetooth", __name__)
+
+
+@route.get('/bluetooth/scan')
+async def scans_bluetooth():
+    service = BluetoothService()
+    return {
+        "results": await service.scan_devices(None)
+    }
 
 
 @route.post('/bluetooth/scan')
@@ -31,19 +38,8 @@ async def scan_bluetooth():
         ]
     }
     """
+
     addresses = request.json["devices"]
-    future_list = []
-    with futures.ThreadPoolExecutor() as executor:
-        for address in addresses:
-            future = executor.submit(scan_device, address)
-            future_list.append(future)
-
-    results = []
-    for future in future_list:
-        result = future.result()
-        results.append({
-            "address": result.address,
-            "found": result.found,
-        })
-
+    service = BluetoothService()
+    results = await service.scan_devices(addresses)
     return {"results": results}

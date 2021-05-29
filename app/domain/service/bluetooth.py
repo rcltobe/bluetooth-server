@@ -1,13 +1,19 @@
 import asyncio
+from typing import List, Optional
 
 from app.domain.models.bluetooth import DeviceState, BluetoothDevice
 from app.domain.repository.device_repository import AbstractDeviceRepository
 from app.domain.repository.device_state_repository import AbstractDeviceStateRepository, DeviceStateEntity
 from app.infra.bluetooth import scan_device
+from app.infra.in_memory.device_repository import InMemoryDeviceRepository
+from app.infra.in_memory.device_state_repository import InMemoryDeviceStateRepository
 
 
 class BluetoothService:
-    def __init__(self, device_repository: AbstractDeviceRepository, state_repository: AbstractDeviceStateRepository):
+    def __init__(self,
+                 device_repository: AbstractDeviceRepository = InMemoryDeviceRepository(),
+                 state_repository: AbstractDeviceStateRepository = InMemoryDeviceStateRepository(),
+                 ):
         self.device_repository = device_repository
         self.state_repository = state_repository
 
@@ -17,18 +23,27 @@ class BluetoothService:
         """
         await self.device_repository.save(device)
 
-    async def scan(self):
+    async def _scan_device(self, address: str):
         """
-        登録されているBluetooth端末を検索
+        Bluetooth端末を検索
+        :param address: 検索する端末のMACアドレス
         """
-        devices = await self.device_repository.find_all()
-        addresses = [device.address for device in devices]
-        scan_results = [scan_device(address) for address in addresses]
+        result = await scan_device(address)
+        state = DeviceState.FOUND if result.found else DeviceState.NOT_FOUND
+        entity = DeviceStateEntity(result.address, state)
+        await self.state_repository.save(entity)
+        return {
+            "address": address,
+            "found": state == result.found
+        }
+
+    async def scan_devices(self, addresses: Optional[List[str]]):
+        if addresses is None:
+            devices = await self.device_repository.find_all()
+            addresses = [device.address for device in devices]
 
         tasks = []
-        for result in scan_results:
-            state = DeviceState.FOUND if result.found else DeviceState.NOT_FOUND
-            entity = DeviceStateEntity(result.address, state)
-            tasks.append(self.state_repository.save(entity))
+        for address in addresses:
+            tasks.append(asyncio.ensure_future(self._scan_device(address)))
 
-        await asyncio.gather(*[tasks])
+        return await asyncio.gather(*tasks)
