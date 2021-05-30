@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 
 class Grade(Enum):
@@ -35,3 +35,15 @@ class User:
             "name": self.name,
             "grade": self.grade
         }
+
+    def to_csv(self) -> List[str]:
+        return [self.id, self.name, self.grade]
+
+    @classmethod
+    def from_csv(cls, csv: List[str]) -> User:
+        grade = Grade.value_of(csv[2]) if len(csv) > 2 else None
+        return User(
+            id=csv[0],
+            name=csv[1],
+            grade=grade
+        )

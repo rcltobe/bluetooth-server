@@ -2,12 +2,8 @@ import csv
 import os
 from typing import List, Optional
 
-from app.domain.models.user import User, Grade
+from app.domain.models.user import User
 from app.domain.repository.user_repository import AbstractUserRepository
-
-
-def to_csv(user: User) -> List[str]:
-    return [user.id, user.name, user.grade]
 
 
 class CsvUserRepository(AbstractUserRepository):
@@ -23,7 +19,7 @@ class CsvUserRepository(AbstractUserRepository):
         with open(self._FILE_PATH) as file:
             reader = csv.reader(file)
             rows = [row for row in reader]
-        return [self.from_csv(row) for row in rows]
+        return [User.from_csv(row) for row in rows]
 
     async def find(self, id: str) -> Optional[User]:
         users = await self.find_all()
@@ -37,7 +33,7 @@ class CsvUserRepository(AbstractUserRepository):
     async def save(self, user: User):
         with open(self._FILE_PATH, 'a') as file:
             writer = csv.writer(file)
-            writer.writerow(to_csv(user))
+            writer.writerow(user.to_csv())
 
     async def delete(self, id: str):
         if not os.path.exists(self._FILE_PATH):
@@ -49,11 +45,3 @@ class CsvUserRepository(AbstractUserRepository):
             for row in reader:
                 if row[self.INDEX_ID] != id:
                     writer.writerow(row)
-
-    def from_csv(self, csv: List[str]) -> User:
-        grade = Grade.value_of(csv[self.INDEX_GRADE]) if len(csv) > self.INDEX_GRADE else None
-        return User(
-            id=csv[self.INDEX_ID],
-            name=csv[self.INDEX_NAME],
-            grade=grade
-        )
