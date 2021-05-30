@@ -17,6 +17,9 @@ class CsvUserRepository(AbstractUserRepository):
     _FILE_PATH = f"{os.curdir}/data/users.csv"
 
     async def find_all(self) -> List[User]:
+        if not os.path.exists(self._FILE_PATH):
+            return []
+
         with open(self._FILE_PATH) as file:
             reader = csv.reader(file)
             rows = [row for row in reader]
@@ -32,14 +35,14 @@ class CsvUserRepository(AbstractUserRepository):
         return users[0]
 
     async def save(self, user: User):
-        # ファイルがなかったら,writeで作成
-        mode = 'a' if os.path.exists(self._FILE_PATH) else 'w'
-
-        with open(self._FILE_PATH, mode) as file:
+        with open(self._FILE_PATH, 'a') as file:
             writer = csv.writer(file)
             writer.writerow(to_csv(user))
 
     async def delete(self, id: str):
+        if not os.path.exists(self._FILE_PATH):
+            return
+
         with open(self._FILE_PATH, 'r') as inp, open(self._FILE_PATH, 'w') as out:
             writer = csv.writer(out)
             reader = csv.reader(inp)
