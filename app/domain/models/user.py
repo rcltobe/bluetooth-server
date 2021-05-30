@@ -15,3 +15,10 @@ class User:
         self.id = id
         self.name: str = name
         self.grade: Optional[Grade] = grade
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "grade": self.grade
+        }

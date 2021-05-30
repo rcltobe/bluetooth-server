@@ -1,0 +1,23 @@
+### ユーザーを追加
+POST http://localhost:5000/user/create
+Content-Type: application/json
+
+{
+  "name": "山田太郎",
+  "devices": [
+    "40:B0:76:89:98:B4"
+  ],
+  "grade": "M4"
+}
+
+### ユーザー一覧を取得
+GET http://localhost:5000/user
+Accept: application/json
+
+### 登録された端末を検索
+GET http://localhost:5000/bluetooth/scan
+Accept: application/json
+
+### 出席を確認
+GET http://localhost:5000/attendance
+Accept: application/json

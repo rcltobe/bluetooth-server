@@ -10,6 +10,12 @@ class BluetoothDevice:
         self.address: str = address
         self.user_id: str = user_id
 
+    def to_json(self):
+        return {
+            "address": self.address,
+            "userId": self.user_id,
+        }
+
 
 class DeviceState(Enum):
     NOT_FOUND = 0
