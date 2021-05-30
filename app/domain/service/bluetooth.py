@@ -30,12 +30,8 @@ class BluetoothService:
         """
         result = await scan_device(address)
         state = DeviceState.FOUND if result.found else DeviceState.NOT_FOUND
-        entity = DeviceStateEntity(result.address, state)
-        await self.state_repository.save(entity)
-        return {
-            "address": address,
-            "found": state == result.found
-        }
+        await self.update_state(address=address, state=state)
+        return result.to_json()
 
     async def scan_devices(self, addresses: Optional[List[str]]):
         if addresses is None:
@@ -47,3 +43,13 @@ class BluetoothService:
             tasks.append(asyncio.ensure_future(self._scan_device(address)))
 
         return await asyncio.gather(*tasks)
+
+    async def update_state(self, address: str, state: DeviceState):
+        entity = await self.state_repository.find_last(address)
+
+        # 前回と状態が変化していなければ、更新しない
+        if entity is not None and entity.state.value == state.value:
+            return
+
+        new_entity = DeviceStateEntity(address=address, state=state)
+        await self.state_repository.save(new_entity)

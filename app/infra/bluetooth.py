@@ -9,6 +9,12 @@ class ScanDeviceResult:
         self.address = address
         self.found = found
 
+    def to_json(self):
+        return {
+            "address": self.address,
+            "found": self.found
+        }
+
 
 async def scan_device(address: str) -> ScanDeviceResult:
     loop = asyncio.get_running_loop()
