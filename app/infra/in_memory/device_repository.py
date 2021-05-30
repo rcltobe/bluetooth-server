@@ -20,3 +20,10 @@ class InMemoryDeviceRepository(AbstractDeviceRepository):
 
     async def save(self, device: BluetoothDevice):
         InMemoryDeviceRepository._devices.append(device)
+
+    async def delete_all_by_user_id(self, user_id: str):
+        InMemoryDeviceRepository._devices = [
+            device
+            for device in InMemoryDeviceRepository._devices
+            if device.user_id != user_id
+        ]

@@ -1,13 +1,19 @@
 from flask import Blueprint, request, Response, jsonify
 
 from app.domain.service.user import UserService
-from app.infra.json import to_json
 
-route = Blueprint("user", __name__)
+route = Blueprint("user", __name__, url_prefix="/user")
 
 
-@route.post("/user/create")
-async def add():
+@route.get("/")
+async def get_users():
+    service = UserService()
+    users = [user.to_json() for user in await service.get_users()]
+    return jsonify(users)
+
+
+@route.post("/create")
+async def create():
     """
     リクエスト例:
     {
@@ -33,15 +39,55 @@ async def add():
     service = UserService()
     new_user = await service.add_user(name=name, devices=devices, grade=grade)
 
-    return jsonify({
-        "user": to_json(new_user)
-    })
+    return new_user.to_json()
 
 
-@route.get("/user")
-async def get_users():
+@route.delete('/delete')
+async def delete():
+    """
+    リクエスト例:
+    {
+        "id": "eb5e3b86-3373-4beb-99af-eade43fa9829"
+    }
+    """
+    request_json = request.json
+    if "id" not in request_json:
+        return Response(status=400)
+
     service = UserService()
-    users = await service.get_users()
-    return jsonify({
-        "users": [to_json(user) for user in users]
-    })
+    await service.delete_user(request_json["id"])
+
+    return Response(status=200)
+
+
+@route.get('/<id>/device')
+async def get_devices(id=None):
+    if id is None:
+        return Response(status=400)
+
+    service = UserService()
+    return jsonify([device.to_json() for device in await service.get_devices(id)])
+
+
+@route.post('/<id>/device/add')
+async def add_device(id=None):
+    """
+    リクエスト例:
+    {
+        "device": "OO:OO:OO:OO:OO:OO"
+    }
+    """
+
+    if id is None:
+        return Response(status=400)
+
+    request_json = request.json
+    if id is None or "device" not in request_json:
+        return Response(status=400)
+
+    service = UserService()
+    device = await service.add_device(user_id=id, address=request_json["device"])
+
+    return {
+        "result": device.to_json() if device is not None else "fail"
+    }

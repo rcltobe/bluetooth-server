@@ -1,0 +1,23 @@
+### ユーザー一覧を取得
+GET http://localhost:5000/user
+Accept: application/json
+
+### ユーザーを追加
+POST http://localhost:5000/user/create
+Content-Type: application/json
+
+{
+  "name": "山田太郎",
+  "devices": [
+    "40:B0:76:89:98:B4"
+  ],
+  "grade": "M4"
+}
+
+### ユーザーを削除
+DELETE http://localhost:5000/user/delete
+Content-Type: application/json
+
+{
+  "id": "eb5e3b86-3373-4beb-99af-eade43fa9829"
+}
