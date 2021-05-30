@@ -3,9 +3,12 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[scripts]
+
+
 [packages]
-flask = "*"
-pybluez = "*"
+Flask = {version = "~=2.0.1", extras = ["async"]}
+PyBluez = "~=0.23"
 
 [dev-packages]
 
