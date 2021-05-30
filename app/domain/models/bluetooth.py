@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from enum import Enum
+from typing import List
 
 
 class BluetoothDevice:
@@ -15,6 +18,16 @@ class BluetoothDevice:
             "address": self.address,
             "userId": self.user_id,
         }
+
+    def to_csv(self) -> List[str]:
+        return [self.address, self.user_id]
+
+    @classmethod
+    def from_csv(cls, csv: List[str]) -> BluetoothDevice:
+        return BluetoothDevice(
+            address=csv[0],
+            user_id=csv[1]
+        )
 
 
 class DeviceState(Enum):
