@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 
 class BluetoothDevice:
@@ -33,3 +33,13 @@ class BluetoothDevice:
 class DeviceState(Enum):
     NOT_FOUND = 0
     FOUND = 1
+
+    @classmethod
+    def value_of(cls, target_value: Optional[str]) -> Optional[DeviceState]:
+        if target_value is None:
+            return None
+
+        for e in DeviceState:
+            if str(e.value) == target_value:
+                return e
+        return None

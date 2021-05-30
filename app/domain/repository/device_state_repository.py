@@ -8,8 +8,8 @@ from app.domain.models.bluetooth import DeviceState
 
 
 class DeviceStateEntity:
-    def __init__(self, address: str, state: DeviceState):
-        self.created_at = time.time()
+    def __init__(self, address: str, state: DeviceState, created_at: Optional[float] = None):
+        self.created_at = time.time() if created_at is None else created_at
         self.address: str = address
         self.state: DeviceState = state
 
@@ -20,6 +20,17 @@ class DeviceStateEntity:
             "createdAt": int(self.created_at),
         }
 
+    def to_csv(self) -> List[str]:
+        return [self.address, self.state.value, int(self.created_at)]
+
+    @classmethod
+    def from_csv(cls, csv: List[str]) -> DeviceStateEntity:
+        return DeviceStateEntity(
+            address=csv[0],
+            state=DeviceState.value_of(csv[1]),
+            created_at=float(csv[2])
+        )
+
     def next(self, states: List[DeviceStateEntity]) -> Optional[DeviceStateEntity]:
         after = [state for state
                  in states
@@ -29,6 +40,8 @@ class DeviceStateEntity:
                  ]
         if len(after) == 0:
             return None
+
+        after = sorted(after, key=lambda state: state.created_at, reverse=True)
 
         return after[0]
 
