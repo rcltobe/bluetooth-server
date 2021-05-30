@@ -1,5 +1,5 @@
 ### 端末を追加
-POST http://localhost:5000/user/17a25b07-757f-4e7b-83af-4521c0a8a3aa/device/add
+POST http://localhost:5000/user/test-user/device/add
 Content-Type: application/json
 
 {
@@ -7,7 +7,7 @@ Content-Type: application/json
 }
 
 ### ユーザーの端末一覧を取得
-GET http://localhost:5000/user/17a25b07-757f-4e7b-83af-4521c0a8a3aa/device
+GET http://localhost:5000/user/test-user/device
 Accept: application/json
 
 ### 登録された端末を検索
