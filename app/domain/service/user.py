@@ -4,8 +4,7 @@ from app.domain.models.bluetooth import BluetoothDevice
 from app.domain.models.user import User
 from app.domain.repository.device_repository import AbstractDeviceRepository
 from app.domain.repository.user_repository import AbstractUserRepository
-from app.infra.in_memory.device_repository import InMemoryDeviceRepository
-from app.infra.in_memory.user_repository import InMemoryUserRepository
+from app.infra.repository import RepositoryContainer
 
 
 class UserData:
@@ -26,8 +25,8 @@ class UserData:
 
 class UserService:
     def __init__(self,
-                 user_repository: AbstractUserRepository = InMemoryUserRepository(),
-                 device_repository: AbstractDeviceRepository = InMemoryDeviceRepository()):
+                 user_repository: AbstractUserRepository = RepositoryContainer.user_repository,
+                 device_repository: AbstractDeviceRepository = RepositoryContainer.device_repository):
         self.user_repository: AbstractUserRepository = user_repository
         self.device_repository: AbstractDeviceRepository = device_repository
 

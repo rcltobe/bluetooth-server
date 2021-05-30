@@ -5,14 +5,13 @@ from app.domain.models.bluetooth import DeviceState, BluetoothDevice
 from app.domain.repository.device_repository import AbstractDeviceRepository
 from app.domain.repository.device_state_repository import AbstractDeviceStateRepository, DeviceStateEntity
 from app.infra.bluetooth import scan_device
-from app.infra.in_memory.device_repository import InMemoryDeviceRepository
-from app.infra.in_memory.device_state_repository import InMemoryDeviceStateRepository
+from app.infra.repository import RepositoryContainer
 
 
 class BluetoothService:
     def __init__(self,
-                 device_repository: AbstractDeviceRepository = InMemoryDeviceRepository(),
-                 state_repository: AbstractDeviceStateRepository = InMemoryDeviceStateRepository(),
+                 device_repository: AbstractDeviceRepository = RepositoryContainer.device_repository,
+                 state_repository: AbstractDeviceStateRepository = RepositoryContainer.device_state_repository,
                  ):
         self.device_repository = device_repository
         self.state_repository = state_repository

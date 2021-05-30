@@ -6,16 +6,14 @@ from app.domain.models.user import User
 from app.domain.repository.device_repository import AbstractDeviceRepository
 from app.domain.repository.device_state_repository import AbstractDeviceStateRepository
 from app.domain.repository.user_repository import AbstractUserRepository
-from app.infra.in_memory.device_repository import InMemoryDeviceRepository
-from app.infra.in_memory.device_state_repository import InMemoryDeviceStateRepository
-from app.infra.in_memory.user_repository import InMemoryUserRepository
+from app.infra.repository import RepositoryContainer
 
 
 class AttendanceService:
     def __init__(self,
-                 user_repository: AbstractUserRepository = InMemoryUserRepository(),
-                 device_repository: AbstractDeviceRepository = InMemoryDeviceRepository(),
-                 device_state_repository: AbstractDeviceStateRepository = InMemoryDeviceStateRepository()):
+                 user_repository: AbstractUserRepository = RepositoryContainer.user_repository,
+                 device_repository: AbstractDeviceRepository = RepositoryContainer.device_repository,
+                 device_state_repository: AbstractDeviceStateRepository = RepositoryContainer.device_state_repository):
         self.user_repository = user_repository
         self.device_repository = device_repository
         self.device_state_repository = device_state_repository
