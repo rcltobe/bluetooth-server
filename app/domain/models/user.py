@@ -24,8 +24,8 @@ class Grade(Enum):
 
 
 class User:
-    def __init__(self, name: str, grade: Optional[Grade], id: str = str(uuid.uuid4())):
-        self.id = id
+    def __init__(self, name: str, grade: Optional[Grade], user_id: Optional[str] = None):
+        self.id = user_id if user_id is not None else str(uuid.uuid4())
         self.name: str = name
         self.grade: Optional[Grade] = grade
 
@@ -43,7 +43,7 @@ class User:
     def from_csv(cls, csv: List[str]) -> User:
         grade = Grade.value_of(csv[2]) if len(csv) > 2 else None
         return User(
-            id=csv[0],
+            user_id=csv[0],
             name=csv[1],
             grade=grade
         )

@@ -2,7 +2,7 @@ from flask import Blueprint, request, Response, jsonify
 
 from app.domain.service.user import UserService
 
-route = Blueprint("user", __name__, url_prefix="/user")
+route = Blueprint("users", __name__, url_prefix="/users")
 
 
 @route.get("/")
@@ -10,6 +10,19 @@ async def get_users():
     service = UserService()
     users = [user.to_json() for user in await service.get_users()]
     return jsonify(users)
+
+
+@route.get("/<id>")
+async def get_user(id=None):
+    if id is None:
+        return Response(status=400)
+
+    service = UserService()
+    user = await service.get_user(id)
+    if user is None:
+        return Response(status=400)
+
+    return user.to_json()
 
 
 @route.post("/create")
@@ -42,20 +55,41 @@ async def create():
     return new_user.to_json()
 
 
-@route.delete('/delete')
-async def delete():
+@route.post('/edit/<id>')
+async def edit(id=None):
     """
     リクエスト例:
     {
-        "id": "eb5e3b86-3373-4beb-99af-eade43fa9829"
+        "name": "new-name",
+        "devices": [],
+        "grade": "M1"
     }
     """
-    request_json = request.json
-    if "id" not in request_json:
+    if id is None:
         return Response(status=400)
 
     service = UserService()
-    await service.delete_user(request_json["id"])
+
+    request_json = request.json
+    if "name" in request_json:
+        await service.update_name(id, request_json["name"])
+
+    if "grade" in request_json:
+        await service.update_grade(id, request_json["grade"])
+
+    if "devices" in request_json:
+        await service.update_devices(id, request_json["devices"])
+
+    return Response(status=200)
+
+
+@route.delete('/delete/{id}')
+async def delete(id=None):
+    if id is None:
+        return Response(status=400)
+
+    service = UserService()
+    await service.delete_user(id)
 
     return Response(status=200)
 
@@ -67,27 +101,3 @@ async def get_devices(id=None):
 
     service = UserService()
     return jsonify([device.to_json() for device in await service.get_devices(id)])
-
-
-@route.post('/<id>/device/add')
-async def add_device(id=None):
-    """
-    リクエスト例:
-    {
-        "device": "OO:OO:OO:OO:OO:OO"
-    }
-    """
-
-    if id is None:
-        return Response(status=400)
-
-    request_json = request.json
-    if id is None or "device" not in request_json:
-        return Response(status=400)
-
-    service = UserService()
-    device = await service.add_device(user_id=id, address=request_json["device"])
-
-    return {
-        "result": device.to_json() if device is not None else "fail"
-    }

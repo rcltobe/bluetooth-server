@@ -18,6 +18,10 @@ class AbstractDeviceRepository:
         pass
 
     @abstractmethod
+    async def delete(self, address: str):
+        pass
+
+    @abstractmethod
     async def delete_all_by_user_id(self, user_id: str):
         """
         user_id に紐づくすべての端末を削除

@@ -10,7 +10,7 @@ class AbstractUserRepository:
         pass
 
     @abstractmethod
-    async def find(self, id: str) -> Optional[User]:
+    async def find(self, user_id: str) -> Optional[User]:
         pass
 
     @abstractmethod
@@ -18,5 +18,17 @@ class AbstractUserRepository:
         pass
 
     @abstractmethod
-    async def delete(self, id: str):
+    async def delete(self, user_id: str):
+        pass
+
+    @abstractmethod
+    async def update_name(self, user_id: str, name: str):
+        pass
+
+    @abstractmethod
+    async def update_grade(self, user_id: str, grade: str):
+        pass
+
+    @abstractmethod
+    async def delete_grade(self, user_id: str):
         pass

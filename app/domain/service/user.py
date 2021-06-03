@@ -18,7 +18,7 @@ class UserData:
         return {
             "id": self.id,
             "name": self.name,
-            "grade": self.grade,
+            "grade": self.grade.value if self.grade is not None else None,
             "devices": self.devices
         }
 
@@ -41,6 +41,16 @@ class UserService:
             ))
         return data
 
+    async def get_user(self, user_id: str) -> Optional[UserData]:
+        user = await self.user_repository.find(user_id)
+        if user is None:
+            return None
+        devices = await self.device_repository.find_by_user_id(user.id)
+        return UserData(
+            user=user,
+            devices=[device.address for device in devices],
+        )
+
     async def add_user(self, name: str, grade: Optional[str], devices: List[str]) -> User:
         user = User(name=name, grade=grade)
         # ユーザーを保存
@@ -57,14 +67,28 @@ class UserService:
         await self.user_repository.find(user_id)
         await self.device_repository.delete_all_by_user_id(user_id=user_id)
 
+    async def update_name(self, user_id: str, name: str):
+        await self.user_repository.update_name(user_id, name)
+
+    async def update_grade(self, user_id: str, grade: Optional[str]):
+        if grade is None:
+            await self.user_repository.delete_grade(user_id)
+        else:
+            await self.user_repository.update_grade(user_id, grade)
+
     async def get_devices(self, user_id: str) -> List[BluetoothDevice]:
         return await self.device_repository.find_by_user_id(user_id)
 
-    async def add_device(self, user_id: str, address: str) -> Optional[BluetoothDevice]:
-        user = await self.user_repository.find(user_id)
-        if user is None:
-            return None
+    async def update_devices(self, user_id: str, addresses: List[str]):
+        devices = await self.device_repository.find_by_user_id(user_id)
+        device_addresses = [device.address for device in devices]
 
-        device = BluetoothDevice(address=address, user_id=user_id)
-        await self.device_repository.save(device)
-        return device
+        added = set(addresses) - set(device_addresses)
+        deleted = set(device_addresses) - set(addresses)
+
+        for address in added:
+            device = BluetoothDevice(address=address, user_id=user_id)
+            await self.device_repository.save(device)
+
+        for address in deleted:
+            await self.device_repository.delete(address)

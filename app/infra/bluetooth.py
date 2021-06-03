@@ -1,5 +1,5 @@
 import asyncio
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 import bluetooth
 
@@ -22,7 +22,7 @@ async def scan_device(address: str) -> ScanDeviceResult:
         return ScanDeviceResult(address=address, found=False)
 
     loop = asyncio.get_running_loop()
-    executor = ProcessPoolExecutor()
+    executor = ThreadPoolExecutor()
     result = await asyncio.ensure_future(loop.run_in_executor(executor, bluetooth.lookup_name, address))
     executor.shutdown(wait=True)
     device_name = result

@@ -7,6 +7,7 @@ from app.domain.repository.device_repository import AbstractDeviceRepository
 
 
 class CsvDeviceRepository(AbstractDeviceRepository):
+    INDEX_ADDRESS = 0
     _FILE_PATH = f"{os.curdir}/data/devices.csv"
 
     async def find_all(self) -> List[BluetoothDevice]:
@@ -25,6 +26,17 @@ class CsvDeviceRepository(AbstractDeviceRepository):
         with open(self._FILE_PATH, 'a') as file:
             writer = csv.writer(file)
             writer.writerow(device.to_csv())
+
+    async def delete(self, address: str):
+        if not os.path.exists(self._FILE_PATH):
+            return
+
+        with open(self._FILE_PATH, 'r') as inp, open(self._FILE_PATH, 'w') as out:
+            writer = csv.writer(out)
+            reader = csv.reader(inp)
+            for row in reader:
+                if row[self.INDEX_ADDRESS] != address:
+                    writer.writerow(row)
 
     async def delete_all_by_user_id(self, user_id: str):
         with open(self._FILE_PATH, 'r') as inp, open(self._FILE_PATH, 'w') as out:
