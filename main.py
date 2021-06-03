@@ -24,4 +24,4 @@ if __name__ == '__main__':
     t = threading.Thread(target=scan_devices)
     t.start()
     app = create_app()
-    app.run()
+    app.run(host="0.0.0.0")
