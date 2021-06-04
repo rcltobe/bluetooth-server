@@ -9,7 +9,7 @@ from app.domain.models.bluetooth import DeviceState
 
 class DeviceStateEntity:
     def __init__(self, address: str, state: DeviceState, created_at: Optional[float] = None):
-        self.created_at = time.time() if created_at is None else created_at
+        self.created_at: float = time.time() if created_at is None else created_at
         self.address: str = address
         self.state: DeviceState = state
 

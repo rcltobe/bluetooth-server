@@ -13,9 +13,16 @@ def scan_devices():
 
     async def _scan_devices():
         while True:
+            start = time.time()
             service = BluetoothService()
             await service.scan_devices(None)
-            time.sleep(10)
+            end = time.time()
+
+            # 1回のサイクルに最低10秒かかるようにし、
+            # 不必要な繰り返しをしないようにする
+            if end - start < 10:
+                duration = end - start
+                time.sleep(10 - duration)
 
     asyncio.run(_scan_devices())
 

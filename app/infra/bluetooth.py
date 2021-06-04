@@ -1,6 +1,3 @@
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-
 import bluetooth
 
 
@@ -16,14 +13,14 @@ class ScanDeviceResult:
         }
 
 
-async def scan_device(address: str) -> ScanDeviceResult:
+def scan_device(address: str) -> ScanDeviceResult:
+    """
+    注意! この処理を、並行、並列処理で呼び出すと正しいスキャン結果を得ることができません。
+    :param address に対応した端末を検索する
+    """
     # TODO: 端末追加時に確認する
     if not bluetooth.is_valid_address(address):
         return ScanDeviceResult(address=address, found=False)
 
-    loop = asyncio.get_running_loop()
-    executor = ThreadPoolExecutor()
-    result = await asyncio.ensure_future(loop.run_in_executor(executor, bluetooth.lookup_name, address))
-    executor.shutdown(wait=True)
-    device_name = result
+    device_name = bluetooth.lookup_name(address, timeout=5)  # 最低5秒で検索できることが多い
     return ScanDeviceResult(address=address, found=device_name is not None)
