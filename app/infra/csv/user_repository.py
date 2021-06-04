@@ -17,7 +17,11 @@ class CsvUserRepository(AbstractUserRepository):
         with open(self._FILE_PATH) as file:
             reader = csv.reader(file)
             rows = [row for row in reader]
-        return [User.from_csv(row) for row in rows]
+        return [
+            user
+            for user in [User.from_csv(row) for row in rows]
+            if user is not None
+        ]
 
     async def find(self, user_id: str) -> Optional[User]:
         users = await self.find_all()

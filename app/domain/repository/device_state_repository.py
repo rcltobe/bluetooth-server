@@ -24,7 +24,10 @@ class DeviceStateEntity:
         return [self.address, self.state.value, int(self.created_at)]
 
     @classmethod
-    def from_csv(cls, csv: List[str]) -> DeviceStateEntity:
+    def from_csv(cls, csv: List[str]) -> Optional[DeviceStateEntity]:
+        if len(csv) < 3:
+            return None
+
         return DeviceStateEntity(
             address=csv[0],
             state=DeviceState.value_of(csv[1]),

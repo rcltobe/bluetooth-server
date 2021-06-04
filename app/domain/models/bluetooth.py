@@ -23,7 +23,10 @@ class BluetoothDevice:
         return [self.address, self.user_id]
 
     @classmethod
-    def from_csv(cls, csv: List[str]) -> BluetoothDevice:
+    def from_csv(cls, csv: List[str]) -> Optional[BluetoothDevice]:
+        if len(csv) < 2:
+            return None
+
         return BluetoothDevice(
             address=csv[0],
             user_id=csv[1]

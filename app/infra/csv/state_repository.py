@@ -15,7 +15,11 @@ class CsvDeviceStateRepository(AbstractDeviceStateRepository):
         with open(self._FILE_PATH) as file:
             reader = csv.reader(file)
             rows = [row for row in reader]
-        return [DeviceStateEntity.from_csv(row) for row in rows]
+        return [
+            state
+            for state in [DeviceStateEntity.from_csv(row) for row in rows]
+            if state is not None
+        ]
 
     async def find_last(self, address: str) -> Optional[DeviceStateEntity]:
         states = await self.find_all()
