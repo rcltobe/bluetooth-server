@@ -60,6 +60,9 @@ class BluetoothService:
         results = []
         for address in addresses:
             last_state = await self.state_repository.find_last(address)
+            if last_state is None:
+                results.append(ScanDeviceResult(address=address, found=False))
+                continue
             found = last_state.state.value == DeviceState.FOUND.value
             in_10m = last_state.created_at >= time.time() - 10 * 60
             results.append(ScanDeviceResult(address=address, found=found and in_10m))
