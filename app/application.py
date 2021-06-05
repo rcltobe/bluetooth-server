@@ -1,6 +1,6 @@
 from flask import Flask
 
-from app.views import (bluetooth, index, user, attendance)
+from app.views import (bluetooth, index, user, attendance, temperature)
 
 
 def create_app() -> Flask:
@@ -8,5 +8,6 @@ def create_app() -> Flask:
     app.register_blueprint(attendance.route)
     app.register_blueprint(bluetooth.route)
     app.register_blueprint(index.route)
+    app.register_blueprint(temperature.route)
     app.register_blueprint(user.route)
     return app

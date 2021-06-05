@@ -4,6 +4,13 @@ from typing import Callable
 from typing import List
 
 
+def save_row(file_name: str, data: List[str]):
+    mode = 'a' if os.path.exists(file_name) else 'w'
+    with open(file_name, mode) as file:
+        writer = csv.writer(file)
+        writer.writerow(data)
+
+
 def delete_row(file_name: str, check: Callable[[List[str]], bool]):
     """
     対象の行のデータを削除
