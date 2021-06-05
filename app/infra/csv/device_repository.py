@@ -4,6 +4,7 @@ from typing import List
 
 from app.domain.models.bluetooth import BluetoothDevice
 from app.domain.repository.device_repository import AbstractDeviceRepository
+from app.infra.csv.csv_util import delete_row
 
 
 class CsvDeviceRepository(AbstractDeviceRepository):
@@ -28,7 +29,8 @@ class CsvDeviceRepository(AbstractDeviceRepository):
         return [user for user in await self.find_all() if user.user_id == user_id]
 
     async def save(self, device: BluetoothDevice):
-        with open(self._FILE_PATH, 'a') as file:
+        mode = 'a' if os.path.exists(self._FILE_PATH) else 'w'
+        with open(self._FILE_PATH, mode) as file:
             writer = csv.writer(file)
             writer.writerow(device.to_csv())
 
@@ -44,10 +46,13 @@ class CsvDeviceRepository(AbstractDeviceRepository):
                     writer.writerow(row)
 
     async def delete_all_by_user_id(self, user_id: str):
-        with open(self._FILE_PATH, 'r') as inp, open(self._FILE_PATH, 'w') as out:
-            writer = csv.writer(out)
-            reader = csv.reader(inp)
-            for row in reader:
-                device = BluetoothDevice.from_csv(row)
-                if device.user_id != user_id:
-                    writer.writerow(row)
+        def _check(row: List[str]) -> bool:
+            device = BluetoothDevice.from_csv(row)
+            if device is None:
+                return False
+            return device.user_id != user_id
+
+        delete_row(
+            file_name=self._FILE_PATH,
+            check=_check
+        )

@@ -42,6 +42,7 @@ class CsvDeviceStateRepository(AbstractDeviceStateRepository):
         return [state for state in states if state.address == address]
 
     async def save(self, state: DeviceStateEntity):
-        with open(self._FILE_PATH, 'a') as file:
+        mode = 'a' if os.path.exists(self._FILE_PATH) else 'w'
+        with open(self._FILE_PATH, mode) as file:
             writer = csv.writer(file)
             writer.writerow(state.to_csv())

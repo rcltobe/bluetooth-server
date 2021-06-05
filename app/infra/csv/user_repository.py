@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from app.domain.models.user import User
 from app.domain.repository.user_repository import AbstractUserRepository
+from app.infra.csv.csv_util import delete_row, update_row
 
 
 class CsvUserRepository(AbstractUserRepository):
@@ -33,62 +34,52 @@ class CsvUserRepository(AbstractUserRepository):
         return users[0]
 
     async def save(self, user: User):
-        with open(self._FILE_PATH, 'a') as file:
+        mode = 'a' if os.path.exists(self._FILE_PATH) else 'w'
+        with open(self._FILE_PATH, mode) as file:
             writer = csv.writer(file)
             writer.writerow(user.to_csv())
 
     async def delete(self, user_id: str):
-        if not os.path.exists(self._FILE_PATH):
-            return
-
-        with open(self._FILE_PATH, 'r') as inp, open(self._FILE_PATH, 'w') as out:
-            writer = csv.writer(out)
-            reader = csv.reader(inp)
-            for row in reader:
-                if row[self.INDEX_ID] != user_id:
-                    writer.writerow(row)
+        delete_row(
+            file_name=self._FILE_PATH,
+            check=lambda row: row[self.INDEX_ID] == user_id,
+        )
 
     async def update_name(self, user_id: str, name: str):
-        if not os.path.exists(self._FILE_PATH):
-            return
+        def _update_name(row: List[str]) -> List[str]:
+            user = User.from_csv(row)
+            user.name = name
+            return user.to_csv()
 
-        with open(self._FILE_PATH, 'r') as inp, open(self._FILE_PATH, 'w') as out:
-            writer = csv.writer(out)
-            reader = csv.reader(inp)
-            for row in reader:
-                if row[self.INDEX_ID] == user_id:
-                    user = User.from_csv(row)
-                    user.name = name
-                    writer.writerow(user.to_csv())
-                else:
-                    writer.writerow(row)
+        update_row(
+            file_name=self._FILE_PATH,
+            check=lambda row: row[self.INDEX_ID] == user_id,
+            on_update=_update_name,
+        )
 
     async def update_grade(self, user_id: str, grade: str):
-        if not os.path.exists(self._FILE_PATH):
-            return
+        def _update_grade(row: List[str]) -> List[str]:
+            user = User.from_csv(row)
+            user.grade = grade
+            return user.to_csv()
 
-        with open(self._FILE_PATH, 'r') as inp, open(self._FILE_PATH, 'w') as out:
-            writer = csv.writer(out)
-            reader = csv.reader(inp)
-            for row in reader:
-                if row[self.INDEX_ID] == user_id:
-                    user = User.from_csv(row)
-                    user.grade = grade
-                    writer.writerow(user.to_csv())
-                else:
-                    writer.writerow(row)
+        update_row(
+            file_name=self._FILE_PATH,
+            check=lambda row: row[self.INDEX_ID] == user_id,
+            on_update=_update_grade,
+        )
 
     async def delete_grade(self, user_id: str):
         if not os.path.exists(self._FILE_PATH):
             return
 
-        with open(self._FILE_PATH, 'r') as inp, open(self._FILE_PATH, 'w') as out:
-            writer = csv.writer(out)
-            reader = csv.reader(inp)
-            for row in reader:
-                if row[self.INDEX_ID] == user_id:
-                    user = User.from_csv(row)
-                    user.grade = None
-                    writer.writerow(user.to_csv())
-                else:
-                    writer.writerow(row)
+        def _delete_grade(row: List[str]) -> List[str]:
+            user = User.from_csv(row)
+            user.grade = None
+            return user.to_csv()
+
+        update_row(
+            file_name=self._FILE_PATH,
+            check=lambda row: row[self.INDEX_ID] == user_id,
+            on_update=_delete_grade
+        )
