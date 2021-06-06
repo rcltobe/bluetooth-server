@@ -33,7 +33,7 @@ class User:
         return {
             "id": self.id,
             "name": self.name,
-            "grade": self.grade
+            "grade": self.grade.value
         }
 
     def to_csv(self) -> List[str]:
