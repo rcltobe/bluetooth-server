@@ -51,16 +51,10 @@ class UserService:
             devices=[device.address for device in devices],
         )
 
-    async def add_user(self, name: str, grade: Optional[str], devices: List[str]) -> User:
-        user = User(name=name, grade=grade)
+    async def add_user(self, user_id: str, name: str, grade: Optional[str]) -> User:
+        user = User(user_id=user_id, name=name, grade=grade)
         # ユーザーを保存
         await self.user_repository.save(user)
-
-        # ユーザーのBluetooth機器を保存
-        for address in devices:
-            device = BluetoothDevice(address=address, user_id=user.id)
-            await self.device_repository.save(device)
-
         return User(name=name, grade=grade)
 
     async def delete_user(self, user_id: str):
@@ -76,19 +70,5 @@ class UserService:
         else:
             await self.user_repository.update_grade(user_id, grade)
 
-    async def get_devices(self, user_id: str) -> List[BluetoothDevice]:
+    async def get_user_devices(self, user_id: str) -> List[BluetoothDevice]:
         return await self.device_repository.find_by_user_id(user_id)
-
-    async def update_devices(self, user_id: str, addresses: List[str]):
-        devices = await self.device_repository.find_by_user_id(user_id)
-        device_addresses = [device.address for device in devices]
-
-        added = set(addresses) - set(device_addresses)
-        deleted = set(device_addresses) - set(addresses)
-
-        for address in added:
-            device = BluetoothDevice(address=address, user_id=user_id)
-            await self.device_repository.save(device)
-
-        for address in deleted:
-            await self.device_repository.delete(address)

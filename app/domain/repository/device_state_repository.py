@@ -4,33 +4,36 @@ import time
 from abc import abstractmethod
 from typing import List, Optional
 
-from app.domain.models.bluetooth import DeviceState
-
 
 class DeviceStateEntity:
-    def __init__(self, address: str, state: DeviceState, created_at: Optional[float] = None):
+    def __init__(self, address: str, found: bool, created_at: Optional[float] = None):
         self.created_at: float = time.time() if created_at is None else created_at
         self.address: str = address
-        self.state: DeviceState = state
+        self.found = found
 
     def to_json(self):
         return {
             "address": self.address,
-            "state": self.state.name,
+            "found": 1 if self.found else 0,
             "createdAt": int(self.created_at),
         }
 
     def to_csv(self) -> List[str]:
-        return [self.address, self.state.value, int(self.created_at)]
+        return [self.address, self.found, int(self.created_at)]
 
     @classmethod
     def from_csv(cls, csv: List[str]) -> Optional[DeviceStateEntity]:
         if len(csv) < 3:
             return None
 
+        try:
+            found = True if int(csv[1]) == 1 else False
+        except ValueError:
+            found = False
+
         return DeviceStateEntity(
             address=csv[0],
-            state=DeviceState.value_of(csv[1]),
+            found=found,
             created_at=float(csv[2])
         )
 
@@ -39,7 +42,7 @@ class DeviceStateEntity:
                  in states
                  if state.created_at > self.created_at
                  and state.address == self.address
-                 and state.state.value != self.state.value
+                 and state.found != self.found
                  ]
         if len(after) == 0:
             return None

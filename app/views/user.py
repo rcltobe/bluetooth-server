@@ -30,27 +30,22 @@ async def create():
     """
     リクエスト例:
     {
+        "id": "test-user"
         "name": "山田太郎",
-        "devices": [
-            "XX:XX:XX:XX:XX:XX",
-            "OO:OO:OO:OO:OO:OO"
-        ],
         "grade": "M4"
     }
 
     """
     request_json = request.json
-    if "name" not in request_json \
-            or "devices" not in request_json:
+    if ("name" not in request_json) or ("id" not in request_json):
         return Response(status=400)
 
     name = request_json["name"]
-    devices = request_json["devices"]
-
+    user_id = request_json["id"]
     grade = request_json["grade"] if "grade" in request_json else ""
 
     service = UserService()
-    new_user = await service.add_user(name=name, devices=devices, grade=grade)
+    new_user = await service.add_user(user_id=user_id, name=name, grade=grade)
 
     return new_user.to_json()
 
@@ -61,7 +56,6 @@ async def edit(id=None):
     リクエスト例:
     {
         "name": "new-name",
-        "devices": [],
         "grade": "M1"
     }
     """
@@ -77,9 +71,6 @@ async def edit(id=None):
     if "grade" in request_json:
         await service.update_grade(id, request_json["grade"])
 
-    if "devices" in request_json:
-        await service.update_devices(id, request_json["devices"])
-
     return Response(status=200)
 
 
@@ -94,10 +85,10 @@ async def delete(id=None):
     return Response(status=200)
 
 
-@route.get('/<id>/device')
-async def get_devices(id=None):
+@route.get('/<id>/devices')
+async def get_user_devices(id=None):
     if id is None:
         return Response(status=400)
 
     service = UserService()
-    return jsonify([device.to_json() for device in await service.get_devices(id)])
+    return jsonify([device.to_json() for device in await service.get_user_devices(id)])

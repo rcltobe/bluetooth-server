@@ -3,7 +3,7 @@ import threading
 import time
 
 from app.application import create_app
-from app.domain.service.bluetooth import BluetoothService
+from app.domain.service.device import DeviceService
 
 
 def scan_devices():
@@ -14,7 +14,7 @@ def scan_devices():
     async def _scan_devices():
         while True:
             start = time.time()
-            service = BluetoothService()
+            service = DeviceService()
             await service.scan_devices(None)
             end = time.time()
 

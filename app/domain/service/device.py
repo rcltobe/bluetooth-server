@@ -4,14 +4,28 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Optional
 
-from app.domain.models.bluetooth import DeviceState, BluetoothDevice
+from app.domain.models.bluetooth import BluetoothDevice
 from app.domain.repository.device_repository import AbstractDeviceRepository
 from app.domain.repository.device_state_repository import AbstractDeviceStateRepository, DeviceStateEntity
-from app.infra.bluetooth import scan_device, ScanDeviceResult
+from app.infra.bluetooth import scan_device
 from app.infra.repository import RepositoryContainer
 
 
-class BluetoothService:
+class ScanResultEntity:
+    def __init__(self, user_id: str, address: str, found: bool):
+        self.user_id = user_id
+        self.address = address
+        self.found = found
+
+    def to_json(self):
+        return {
+            "user_id": self.user_id,
+            "address": self.address,
+            "found": self.found
+        }
+
+
+class DeviceService:
     def __init__(self,
                  device_repository: AbstractDeviceRepository = RepositoryContainer.device_repository,
                  state_repository: AbstractDeviceStateRepository = RepositoryContainer.device_state_repository,
@@ -22,11 +36,15 @@ class BluetoothService:
     INTERVAL_SCAN = 10 * 60  # 端末を発見してから次に検索するまでの間隔
     INTERVAL_UPDATE = 10 * 60  # 状態が変化していないときに、更新する間隔
 
-    async def add_device(self, device: BluetoothDevice):
-        """
-        ユーザーに紐付ける端末を追加
-        """
+    async def get_devices(self) -> List[BluetoothDevice]:
+        return await self.device_repository.find_all()
+
+    async def add_device(self, user_id: str, address: str):
+        device = BluetoothDevice(address=address, user_id=user_id)
         await self.device_repository.save(device)
+
+    async def delete_device(self, address: str):
+        await self.device_repository.delete(address)
 
     async def scan_devices(self, addresses: Optional[List[str]] = None):
         """
@@ -46,41 +64,39 @@ class BluetoothService:
             state = await self.state_repository.find_last(address)
             if state is not None \
                     and state.created_at >= time.time() - self.INTERVAL_SCAN \
-                    and state.state.value == DeviceState.FOUND.value:
+                    and state.found:
                 # 10分以内に発見されていたら、スキャンせずに、前の結果を使う
                 continue
 
             result = await asyncio.ensure_future(loop.run_in_executor(executor, scan_device, address))
-            state = DeviceState.FOUND if result.found else DeviceState.NOT_FOUND
-            await self.update_state(address=address, state=state)
+            await self.update_state(address=address, found=result.found)
             print("{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()), "[scan_devices]", result.to_json())
 
-    async def get_scan_results(self, addresses: Optional[List[str]] = None) -> List[ScanDeviceResult]:
-        if addresses is None:
-            devices = await self.device_repository.find_all()
-            addresses = [device.address for device in devices]
+    async def get_scan_results(self) -> List[ScanResultEntity]:
+        devices = await self.device_repository.find_all()
 
-        results = []
-        for address in addresses:
+        results: List[ScanResultEntity] = []
+        for device in devices:
+            address = device.address
             last_state = await self.state_repository.find_last(address)
             if last_state is None:
-                results.append(ScanDeviceResult(address=address, found=False))
+                results.append(ScanResultEntity(address=address, found=False, user_id=device.user_id))
                 continue
 
-            found = last_state.state.value == DeviceState.FOUND.value
+            found = last_state.found == True
             in_10m = last_state.created_at >= time.time() - self.INTERVAL_SCAN
-            results.append(ScanDeviceResult(address=address, found=found and in_10m))
+            results.append(ScanResultEntity(address=address, found=found and in_10m, user_id=device.user_id))
 
         return results
 
-    async def update_state(self, address: str, state: DeviceState):
+    async def update_state(self, address: str, found: bool):
         entity = await self.state_repository.find_last(address)
 
         # 前回と状態が変化していなければ、更新しない
         if entity is not None \
-                and entity.state.value == state.value \
+                and entity.found == found \
                 and entity.created_at >= time.time() - self.INTERVAL_UPDATE:
             return
 
-        new_entity = DeviceStateEntity(address=address, state=state)
+        new_entity = DeviceStateEntity(address=address, found=found)
         await self.state_repository.save(new_entity)
