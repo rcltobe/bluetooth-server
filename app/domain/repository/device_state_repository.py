@@ -1,40 +1,46 @@
 from __future__ import annotations
 
 import time
+import uuid
 from abc import abstractmethod
 from typing import List, Optional
 
+from app.domain.models.util import DateRange
+
 
 class DeviceStateEntity:
-    def __init__(self, address: str, found: bool, created_at: Optional[float] = None):
+    def __init__(self, address: str, found: bool, id: Optional[str] = None, created_at: Optional[float] = None):
+        self.id = str(uuid.uuid4()) if id is None else id
         self.created_at: float = time.time() if created_at is None else created_at
         self.address: str = address
         self.found = found
 
     def to_json(self):
         return {
+            "id": self.id,
             "address": self.address,
-            "found": 1 if self.found else 0,
+            "found": self.found,
             "createdAt": int(self.created_at),
         }
 
     def to_csv(self) -> List[str]:
-        return [self.address, self.found, int(self.created_at)]
+        return [self.id, self.address, 1 if self.found else 0, int(self.created_at)]
 
     @classmethod
     def from_csv(cls, csv: List[str]) -> Optional[DeviceStateEntity]:
-        if len(csv) < 3:
+        if len(csv) < 4:
             return None
 
         try:
-            found = True if int(csv[1]) == 1 else False
+            found = True if int(csv[2]) == 1 else False
         except ValueError:
             found = False
 
         return DeviceStateEntity(
-            address=csv[0],
+            id=csv[0],
+            address=csv[1],
             found=found,
-            created_at=float(csv[2])
+            created_at=float(csv[3])
         )
 
     def next(self, states: List[DeviceStateEntity]) -> Optional[DeviceStateEntity]:
@@ -54,7 +60,7 @@ class DeviceStateEntity:
 
 class AbstractDeviceStateRepository:
     @abstractmethod
-    async def find_all(self) -> List[DeviceStateEntity]:
+    async def find_all(self, date_range: Optional[DateRange] = None) -> List[DeviceStateEntity]:
         pass
 
     @abstractmethod
@@ -70,4 +76,8 @@ class AbstractDeviceStateRepository:
 
     @abstractmethod
     async def save(self, state: DeviceStateEntity):
+        pass
+
+    @abstractmethod
+    async def delete(self, state_id: str):
         pass

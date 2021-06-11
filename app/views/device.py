@@ -58,3 +58,27 @@ async def scans_bluetooth():
         result.to_json()
         for result in await service.get_scan_results()
     ])
+
+
+@route.get('/states')
+async def get_all_device_states():
+    service = DeviceService()
+    states = await service.get_all_device_states()
+    return jsonify([
+        state.to_json()
+        for state in states
+    ])
+
+
+@route.post("/states/<address>")
+async def get_device_states(address: str = None):
+    if address is None:
+        return Response(status=400)
+
+    service = DeviceService()
+    states = await service.get_device_states(address)
+
+    return jsonify([
+        state.to_json()
+        for state in states
+    ])
