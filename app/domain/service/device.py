@@ -1,7 +1,5 @@
-import asyncio
 import datetime
 import time
-from concurrent.futures import ThreadPoolExecutor
 from typing import List, Optional
 
 from app.domain.models.bluetooth import BluetoothDevice
@@ -57,9 +55,6 @@ class DeviceService:
             devices = await self.device_repository.find_all()
             addresses = [device.address for device in devices]
 
-        loop = asyncio.get_running_loop()
-        executor = ThreadPoolExecutor()
-
         for address in addresses:
             state = await self.state_repository.find_last(address)
             if state is not None \
@@ -68,7 +63,7 @@ class DeviceService:
                 # 10分以内に発見されていたら、スキャンせずに、前の結果を使う
                 continue
 
-            result = await asyncio.ensure_future(loop.run_in_executor(executor, scan_device, address))
+            result = scan_device(address=address)
             await self.update_state(address=address, found=result.found)
             print("{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()), "[scan_devices]", result.to_json())
 
@@ -83,9 +78,14 @@ class DeviceService:
                 results.append(ScanResultEntity(address=address, found=False, user_id=device.user_id))
                 continue
 
-            found = last_state.found == True
+            # 10分以内に端末を発見していれば、スキャンしない
             in_10m = last_state.created_at >= time.time() - self.INTERVAL_SCAN
-            results.append(ScanResultEntity(address=address, found=found and in_10m, user_id=device.user_id))
+            entity = ScanResultEntity(
+                address=address,
+                user_id=device.user_id,
+                found=last_state.found and in_10m,
+            )
+            results.append(entity)
 
         return results
 
