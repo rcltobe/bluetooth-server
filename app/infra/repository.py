@@ -4,7 +4,7 @@ from app.domain.repository.device_state_repository import AbstractDeviceStateRep
 from app.domain.repository.user_repository import AbstractUserRepository
 from app.infra.csv.body_temperature_repository import CsvBodyTemperatureRepository
 from app.infra.csv.device_repository import CsvDeviceRepository
-from app.infra.csv.state_repository import CsvDeviceStateRepository
+from app.infra.csv.device_state_repository import CsvDeviceStateRepository
 from app.infra.csv.user_repository import CsvUserRepository
 
 

@@ -89,6 +89,12 @@ class DeviceService:
 
         return results
 
+    async def get_all_device_states(self, date_range: Optional[DateRange] = None) -> List[DeviceStateEntity]:
+        return await self.state_repository.find_all(date_range)
+
+    async def get_device_states(self, address: str) -> List[DeviceStateEntity]:
+        return await self.state_repository.find_all_by_address(address)
+
     async def update_state(self, address: str, found: bool):
         entity = await self.state_repository.find_last(address)
 

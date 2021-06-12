@@ -1,5 +1,6 @@
 from flask import Blueprint, request, Response, jsonify
 
+from app.domain.models.util import DateRange
 from app.domain.service.device import DeviceService
 
 route = Blueprint("devices", __name__, url_prefix="/devices")
@@ -64,6 +65,34 @@ async def scans_bluetooth():
 async def get_all_device_states():
     service = DeviceService()
     states = await service.get_all_device_states()
+    return jsonify([
+        state.to_json()
+        for state in states
+    ])
+
+
+@route.post('/states')
+async def get_all_device_states_in_date_range():
+    """
+    リクエスト例
+    {
+        "start": 1622977822,
+        "end": 1622977847
+    }
+    """
+    request_json = request.json
+    if "start" not in request_json or "end" not in request_json:
+        return Response(status=400)
+
+    try:
+        start = int(request_json["start"])
+        end = int(request_json["end"])
+    except ValueError:
+        return Response(status=400)
+
+    service = DeviceService()
+    states = await service.get_all_device_states(DateRange(start, end))
+
     return jsonify([
         state.to_json()
         for state in states

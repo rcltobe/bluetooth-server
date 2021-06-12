@@ -1,13 +1,18 @@
 from typing import List, Optional
 
+from app.domain.models.util import DateRange
 from app.domain.repository.device_state_repository import AbstractDeviceStateRepository, DeviceStateEntity
 
 
 class InMemoryDeviceStateRepository(AbstractDeviceStateRepository):
     _states: List[DeviceStateEntity] = []
 
-    async def find_all(self) -> List[DeviceStateEntity]:
-        return InMemoryDeviceStateRepository._states
+    async def find_all(self, date_range: Optional[DateRange] = None) -> List[DeviceStateEntity]:
+        return [
+            state
+            for state in InMemoryDeviceStateRepository._states
+            if state.in_range(date_range)
+        ]
 
     async def find_all_by_address(self, address: str) -> List[DeviceStateEntity]:
         return [device for device
@@ -32,3 +37,10 @@ class InMemoryDeviceStateRepository(AbstractDeviceStateRepository):
 
     async def save(self, state: DeviceStateEntity):
         InMemoryDeviceStateRepository._states.append(state)
+
+    async def delete(self, state_id: str):
+        self._states = [
+            state
+            for state in self._states
+            if state.id != state_id
+        ]

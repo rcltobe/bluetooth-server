@@ -15,6 +15,16 @@ class DeviceStateEntity:
         self.address: str = address
         self.found = found
 
+    def in_range(self, range: Optional[DateRange]) -> bool:
+        """
+        このデータが指定された日時の範囲内にあるかを判定する。
+        :return 日時の範囲内の場合 True を返す。 また、rangeがNoneの場合もTrueを返す
+        """
+        if range is None:
+            return True
+
+        return range.start <= self.created_at <= range.end
+
     def to_json(self):
         return {
             "id": self.id,
@@ -43,12 +53,29 @@ class DeviceStateEntity:
             created_at=float(csv[3])
         )
 
+    def before(self, states: List[DeviceStateEntity]) -> Optional[DeviceStateEntity]:
+        """
+        時系列順に並べたときの、同じ端末の前のDeviceStateEntityを取得
+        """
+        before = [state for state
+                  in states
+                  if state.address == self.address
+                  and state.created_at < self.created_at
+                  ]
+
+        if len(before) == 0:
+            return None
+        before = sorted(before, key=lambda state: state.created_at)
+        return before[0]
+
     def next(self, states: List[DeviceStateEntity]) -> Optional[DeviceStateEntity]:
+        """
+        時系列順に並べたときの、同じ端末の次のDeviceStateEntityを取得
+        """
         after = [state for state
                  in states
-                 if state.created_at > self.created_at
-                 and state.address == self.address
-                 and state.found != self.found
+                 if state.address == self.address
+                 and state.created_at > self.created_at
                  ]
         if len(after) == 0:
             return None
