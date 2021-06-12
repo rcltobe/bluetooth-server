@@ -3,6 +3,7 @@ import time
 from typing import List, Optional
 
 from app.domain.models.bluetooth import BluetoothDevice
+from app.domain.models.util import DateRange
 from app.domain.repository.device_repository import AbstractDeviceRepository
 from app.domain.repository.device_state_repository import AbstractDeviceStateRepository, DeviceStateEntity
 from app.infra.bluetooth import scan_device
@@ -96,13 +97,14 @@ class DeviceService:
         return await self.state_repository.find_all_by_address(address)
 
     async def update_state(self, address: str, found: bool):
-        entity = await self.state_repository.find_last(address)
-
-        # 前回と状態が変化していなければ、更新しない
-        if entity is not None \
-                and entity.found == found \
-                and entity.created_at >= time.time() - self.INTERVAL_UPDATE:
+        prev_entity = await self.state_repository.find_last(address)
+        new_entity = DeviceStateEntity(address=address, found=found)
+        # 初回のデータ、または、端末を発見した場合は更新する。
+        if prev_entity is None or found:
+            await self.state_repository.save(new_entity)
             return
 
-        new_entity = DeviceStateEntity(address=address, found=found)
-        await self.state_repository.save(new_entity)
+        # 前回と状態が変化していれば更新する
+        if prev_entity.found != found:
+            await self.state_repository.save(new_entity)
+            return
