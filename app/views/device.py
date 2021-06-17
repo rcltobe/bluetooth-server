@@ -34,7 +34,7 @@ async def add_device():
     return Response(status=200)
 
 
-@route.delete("/delete")
+@route.post("/delete")
 async def delete_device():
     """
     リクエスト例

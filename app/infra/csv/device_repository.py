@@ -38,12 +38,10 @@ class CsvDeviceRepository(AbstractDeviceRepository):
         if not os.path.exists(self._FILE_PATH):
             return
 
-        with open(self._FILE_PATH, 'r') as inp, open(self._FILE_PATH, 'w') as out:
-            writer = csv.writer(out)
-            reader = csv.reader(inp)
-            for row in reader:
-                if row[self.INDEX_ADDRESS] != address:
-                    writer.writerow(row)
+        def check(csv: List[str]) -> bool:
+            return csv[self.INDEX_ADDRESS] == address
+
+        delete_row(self._FILE_PATH, check)
 
     async def delete_all_by_user_id(self, user_id: str):
         def _check(row: List[str]) -> bool:
