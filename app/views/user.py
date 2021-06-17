@@ -74,7 +74,7 @@ async def edit(id=None):
     return Response(status=200)
 
 
-@route.delete('/delete/{id}')
+@route.delete('/delete/<id>')
 async def delete(id=None):
     if id is None:
         return Response(status=400)

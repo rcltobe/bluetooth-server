@@ -58,7 +58,7 @@ class UserService:
         return User(name=name, grade=grade)
 
     async def delete_user(self, user_id: str):
-        await self.user_repository.find(user_id)
+        await self.user_repository.delete(user_id)
         await self.device_repository.delete_all_by_user_id(user_id=user_id)
 
     async def update_name(self, user_id: str, name: str):
