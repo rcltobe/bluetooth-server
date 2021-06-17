@@ -25,7 +25,7 @@ def delete_row(file_name: str, check: Callable[[List[str]], bool]):
         rows = [
             row
             for row in reader
-            if check(row)
+            if not check(row)
         ]
     with open(file_name, 'w') as f:
         writer = csv.writer(f)

@@ -48,7 +48,7 @@ class CsvDeviceRepository(AbstractDeviceRepository):
             device = BluetoothDevice.from_csv(row)
             if device is None:
                 return False
-            return device.user_id != user_id
+            return device.user_id == user_id
 
         delete_row(
             file_name=self._FILE_PATH,
