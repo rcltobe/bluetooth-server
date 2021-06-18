@@ -1,3 +1,0 @@
-### 出席を確認
-GET http://localhost:5000/attendance
-Accept: application/json

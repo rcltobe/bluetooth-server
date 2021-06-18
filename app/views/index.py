@@ -13,7 +13,6 @@ def index():
 @route.get('/debug')
 async def debug():
     return {
-        "users": [user.to_json() for user in await RepositoryContainer.user_repository.find_all()],
         "devices": [device.to_json() for device in await RepositoryContainer.device_repository.find_all()],
         "states": [state.to_json() for state in await RepositoryContainer.device_state_repository.find_all()],
     }
