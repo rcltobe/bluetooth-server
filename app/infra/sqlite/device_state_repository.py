@@ -7,10 +7,12 @@ from app.domain.repository.device_state_repository import AbstractDeviceStateRep
 
 
 def create_database(func):
-    def _create_database():
-        if not os.path.exists(SqliteDeviceStateRepository.DBPATH):
-            db = sqlite3.connect(SqliteDeviceStateRepository.DBPATH)
-            db.execute(
+    async def _create_database(*args, **kwargs):
+        if os.path.exists(SqliteDeviceStateRepository.DBPATH):
+            return await func(*args, **kwargs)
+
+        with sqlite3.connect(SqliteDeviceStateRepository.DBPATH) as conn:
+            conn.execute(
                 "CREATE TABLE IF NOT EXISTS "
                 "device_states("
                 "id VARCHAR(50) PRIMARY KEY, "
@@ -19,25 +21,28 @@ def create_database(func):
                 "created_at FLOAT"
                 ");"
             )
-            db.close()
-            func()
+
+        return await func(*args, **kwargs)
 
     return _create_database
 
 
 class SqliteDeviceStateRepository(AbstractDeviceStateRepository):
-    DBNAME = "device_states.sqlite"
+    DBNAME = "device_states.sqlite3"
     DBPATH = f"data/{DBNAME}"
 
     @create_database
     async def find_all(self, date_range: Optional[DateRange] = None) -> List[DeviceStateEntity]:
-        with sqlite3.connect("users.sqlite") as conn:
+        with sqlite3.connect(self.DBPATH) as conn:
             cursor = conn.cursor()
             # ?(プレースホルダー)で指定すると内部的にエスケープされる
-            cursor.execute(
-                "SELECT * FROM device_states WHERE created_at > ? AND created_at < ?",
-                (date_range.start, date_range.end)
-            )
+            if date_range is None:
+                cursor.execute("SELECT * FROM device_states")
+            else:
+                cursor.execute(
+                    "SELECT * FROM device_states WHERE created_at > ? AND created_at < ?",
+                    (date_range.start, date_range.end)
+                )
         return [
             DeviceStateEntity.from_csv(state)
             for state in cursor.fetchall()
@@ -45,12 +50,12 @@ class SqliteDeviceStateRepository(AbstractDeviceStateRepository):
 
     @create_database
     async def find_last(self, address: str) -> Optional[DeviceStateEntity]:
-        with sqlite3.connect("users.sqlite") as conn:
+        with sqlite3.connect(self.DBPATH) as conn:
             cursor = conn.cursor()
             # ?(プレースホルダー)で指定すると内部的にエスケープされる
             cursor.execute(
                 "SELECT * FROM device_states WHERE address = ? ORDER BY created_at DESC;",
-                address
+                (address,)
             )
 
         result = cursor.fetchone()
@@ -61,12 +66,12 @@ class SqliteDeviceStateRepository(AbstractDeviceStateRepository):
 
     @create_database
     async def find_all_by_address(self, address: str) -> List[DeviceStateEntity]:
-        with sqlite3.connect("users.sqlite") as conn:
+        with sqlite3.connect(self.DBPATH) as conn:
             cursor = conn.cursor()
             # ?(プレースホルダー)で指定すると内部的にエスケープされる
             cursor.execute(
                 "SELECT * FROM device_states WHERE address = ?",
-                address
+                (address,)
             )
         return [
             DeviceStateEntity.from_csv(state)
@@ -79,7 +84,7 @@ class SqliteDeviceStateRepository(AbstractDeviceStateRepository):
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO device_states (id, address, found, created_at) VALUES (?, ?, ?, ?)",
-                (state.id, state.address, state.found, state.created_at)
+                (state.id, state.address, state.found, int(state.created_at))
             )
             conn.commit()
 
@@ -89,6 +94,6 @@ class SqliteDeviceStateRepository(AbstractDeviceStateRepository):
             cursor = conn.cursor()
             cursor.execute(
                 "DELETE FROM device_states WHERE id = ?",
-                state_id
+                (state_id,)
             )
             conn.commit()
