@@ -87,10 +87,6 @@ class DeviceStateEntity:
 
 class AbstractDeviceStateRepository:
     @abstractmethod
-    async def find_all(self, date_range: Optional[DateRange] = None) -> List[DeviceStateEntity]:
-        pass
-
-    @abstractmethod
     async def find_last(self, address: str) -> Optional[DeviceStateEntity]:
         """
         更新日が最新の DeviceStateEntity を取得
@@ -98,13 +94,5 @@ class AbstractDeviceStateRepository:
         pass
 
     @abstractmethod
-    async def find_all_by_address(self, address: str) -> List[DeviceStateEntity]:
-        pass
-
-    @abstractmethod
     async def save(self, state: DeviceStateEntity):
-        pass
-
-    @abstractmethod
-    async def delete(self, state_id: str):
         pass

@@ -1,3 +1,7 @@
-Flask[async]~=2.0.1
 pybluez~=0.23
 gattlib
+Flask[async]~=2.0.1
+gspread
+gspread_asyncio
+oauth2client
+python-dotenv
