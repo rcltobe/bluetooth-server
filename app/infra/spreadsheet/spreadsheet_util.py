@@ -59,6 +59,9 @@ class SpreadSheetUtil:
         return await book.worksheet(self.book_name)
 
     async def find_all(self, value: str, column: int) -> List[Cell]:
+        """
+        column の値が valueであるすべてのセルを取得
+        """
         worksheet = await self._get_worksheet()
         result = await _create_async(lambda: worksheet.ws.findall(value, in_column=column))
         return result
@@ -69,6 +72,9 @@ class SpreadSheetUtil:
         return results
 
     async def get_values(self) -> List[List[str]]:
+        """
+        ワークシートにあるすべての値を取得
+        """
         worksheet = await self._get_worksheet()
         return await worksheet.get_all_values()
 
