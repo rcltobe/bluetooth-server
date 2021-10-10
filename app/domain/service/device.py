@@ -29,6 +29,7 @@ class DeviceService:
                  ):
         self.device_repository = device_repository
         self.state_repository = state_repository
+        self.logger = logging.getLogger(__name__)
 
     INTERVAL_SCAN = 10 * 60  # 端末を発見してから次に検索するまでの間隔
     INTERVAL_UPDATE = 10 * 60  # 状態が変化していないときに、更新する間隔
@@ -42,28 +43,30 @@ class DeviceService:
 
         :param addresses: 検索する端末のMACアドレス, Noneの場合は、登録された端末を検索する
         """
-        logger = logging.getLogger(__name__)
-
         # 登録されたすべての端末のMACアドレスを取得
         if addresses is None:
             devices = await self.device_repository.find_all()
             addresses = [device.address for device in devices]
 
-        logger.info(f"SCAN FOR {addresses}")
+        self.logger.info(f"SCAN FOR {addresses}")
 
         # 端末をBluetoothでスキャンする
         for address in addresses:
-            # 10分以内に発見されていたら、スキャンせずに、前の結果を使う
-            state = await self.state_repository.find_last(address)
-            if state is not None \
-                    and state.created_at >= time.time() - self.INTERVAL_SCAN \
-                    and state.found:
-                continue
+            await self._scan_device(address)
 
-            # スキャン
-            result = scan_device(address=address)
-            await self.update_state(address=address, found=result.found)
-            logger.info(f"DEVICE SCANNED {result.to_json()}")
+    async def _scan_device(self, address: str):
+        # 10分以内に発見されていたら、スキャンせずに、前の結果を使う
+        state = await self.state_repository.find_last(address)
+        if state is not None \
+                and state.created_at >= time.time() - self.INTERVAL_SCAN \
+                and state.found:
+            self.logger.info(f"SCAN(USE CACHE) {state.to_json()}")
+            return
+
+        # スキャン
+        result = scan_device(address=address)
+        await self.update_state(address=address, found=result.found)
+        self.logger.info(f"DEVICE SCANNED {result.to_json()}")
 
     async def update_state(self, address: str, found: bool):
         prev_entity = await self.state_repository.find_last(address)
@@ -73,7 +76,7 @@ class DeviceService:
             await self.state_repository.save(new_entity)
             return
 
-        # 前回と状態が変化していれば更新する
+        # 前回と状態が変化していれば更新する(連続して発見できていないときは保存されないようにする)
         if prev_entity.found != found:
             await self.state_repository.save(new_entity)
             return
