@@ -14,21 +14,39 @@ def scan_devices():
     """
     10秒ごとにBluetooth端末の検索を行う
     """
-    logger = logging.getLogger(__name__)
+    # スキャン処理を行う間隔
+    interval_scan = 60
+
+    # 2日分のスキャン結果を残す
+    mills_day = 24 * 60 * 60 * 1000
+    save_result_span = 2 * mills_day
 
     async def _scan_devices():
-        logger.info("START SCAN")
+        logging.info("START SCAN")
+
+        counter = 0
         while True:
             start = time.time()
             service = DeviceService()
-            await service.scan_devices(None)
+            try:
+                await service.scan_devices(None)
+            except Exception as e:
+                logging.error(e)
+
             end = time.time()
 
-            # 1回のサイクルに最低10秒かかるようにし、
+            # 1回のサイクルに最低60秒かかるようにし、
             # 不必要な繰り返しをしないようにする
-            if end - start < 10:
+            if end - start < interval_scan:
                 duration = end - start
-                time.sleep(10 - duration)
+                time.sleep(interval_scan - duration)
+
+            # 1時間ごとに、今から2日前の出席データを削除する
+            if counter == 60:
+                await service.delete_results_before(time.time() - save_result_span)
+                counter = 0
+
+            counter += 1
 
     asyncio.run(_scan_devices())
 

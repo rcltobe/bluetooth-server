@@ -66,11 +66,6 @@ class SpreadSheetUtil:
         result = await _create_async(lambda: worksheet.ws.findall(value, in_column=column))
         return result
 
-    async def batch_get(self, ranges: List[str]) -> List[List[List[str]]]:
-        worksheet = await self._get_worksheet()
-        results = await _create_async(lambda: worksheet.ws.batch_get(ranges))
-        return results
-
     async def get_values(self) -> List[List[str]]:
         """
         ワークシートにあるすべての値を取得
@@ -84,8 +79,18 @@ class SpreadSheetUtil:
         :param values: 書き込む値
         """
         worksheet = await self._get_worksheet()
+        await worksheet.insert_row(values)
+
+    async def append_all_values(self, values: List[List[str]]):
         row = len(await self.get_values()) + 1
-        cells = [Cell(row, i + 1, values[i]) for i in range(0, len(values))]
+
+        cells = []
+        for row_i in range(len(values)):
+            row_values = values[row_i]
+            row_cells = [Cell(row_i + row, i + 1, row_values[i]) for i in range(0, len(row_values))]
+            cells.extend(row_cells)
+
+        worksheet = await self._get_worksheet()
         await worksheet.update_cells(cells)
 
     async def get_row(self, row) -> List[str]:
@@ -117,3 +122,7 @@ class SpreadSheetUtil:
     async def clear_values(self, row: int):
         worksheet = await self._get_worksheet()
         await worksheet.delete_row(row)
+
+    async def delete_rows(self, start_row: int, end_row: int):
+        worksheet = await self._get_worksheet()
+        await worksheet.delete_rows(start_row, end_row)

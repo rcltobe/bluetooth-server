@@ -23,6 +23,11 @@ class ScanResultEntity:
 
 
 class DeviceService:
+    """
+    端末のスキャン処理と、スキャン結果の保存を行う
+    SpreadSheetに過度なアクセスをしないように実装されている。
+    """
+
     def __init__(self,
                  device_repository: AbstractDeviceRepository = RepositoryContainer.device_repository,
                  state_repository: AbstractDeviceStateRepository = RepositoryContainer.device_state_repository,
@@ -33,6 +38,9 @@ class DeviceService:
 
     INTERVAL_SCAN = 10 * 60  # 端末を発見してから次に検索するまでの間隔
     INTERVAL_UPDATE = 10 * 60  # 状態が変化していないときに、更新する間隔
+
+    async def delete_results_before(self, time_in_mills):
+        await self.state_repository.delete_before(time_in_mills)
 
     async def scan_devices(self, addresses: Optional[List[str]] = None):
         """
@@ -51,32 +59,70 @@ class DeviceService:
         self.logger.info(f"SCAN FOR {addresses}")
 
         # 端末をBluetoothでスキャンする
+        all_states = await self.state_repository.find_all()
+        scan_results = []
         for address in addresses:
-            await self._scan_device(address)
+            last_state = self._get_last_device_states(address, all_states)
+            result = await self._scan_device(address, last_state)
+            if result is not None:
+                scan_results.append(result)
 
-    async def _scan_device(self, address: str):
+        # 保存が必要な結果のみを抽出
+        results_for_updates = []
+        for result in scan_results:
+            prev_state = self._get_last_device_states(result.address, all_states)
+            if self._should_update_state(prev_state, result):
+                results_for_updates.append(result)
+
+        # スキャン結果を保存
+        await self.state_repository.save_all(results_for_updates)
+
+    async def _scan_device(self, address: str, prev_state: DeviceStateEntity) -> Optional[DeviceStateEntity]:
+        """
+        付近に端末がいるかどうか、スキャンする
+        @:param prev_state 前回のスキャン結果
+        @:return スキャン結果（前回のスキャンと結果が変わらない場合はNoneを返す）
+        """
         # 10分以内に発見されていたら、スキャンせずに、前の結果を使う
-        state = await self.state_repository.find_last(address)
-        if state is not None \
-                and state.created_at >= time.time() - self.INTERVAL_SCAN \
-                and state.found:
-            self.logger.info(f"SCAN(USE CACHE) {state.to_json()}")
-            return
+        if prev_state is not None \
+                and prev_state.created_at >= time.time() - self.INTERVAL_SCAN \
+                and prev_state.found:
+            self.logger.info(f"SCAN(USE CACHE) {prev_state.to_json()}")
+            return None
 
         # スキャン
         result = scan_device(address=address)
-        await self.update_state(address=address, found=result.found)
-        self.logger.info(f"DEVICE SCANNED {result.to_json()}")
+        prev_state = DeviceStateEntity(address=address, found=result.found)
+        self.logger.info(f"DEVICE SCANNED {prev_state.to_json()}")
+        return prev_state
 
-    async def update_state(self, address: str, found: bool):
-        prev_entity = await self.state_repository.find_last(address)
-        new_entity = DeviceStateEntity(address=address, found=found)
-        # 初回のデータ、または、端末を発見した場合は更新する。
-        if prev_entity is None or found:
-            await self.state_repository.save(new_entity)
-            return
+    def _should_update_state(self, prev_result: DeviceStateEntity, new_result: DeviceStateEntity) -> bool:
+        """
+        検索結果を更新すべきかどうかを判定する
+        """
+        # 初回のデータの場合は更新する。
+        if prev_result is None:
+            return True
 
-        # 前回と状態が変化していれば更新する(連続して発見できていないときは保存されないようにする)
-        if prev_entity.found != found:
-            await self.state_repository.save(new_entity)
-            return
+        # 前回と状態が変化していれば更新する
+        if prev_result.found != new_result.found:
+            return True
+
+        return False
+
+    def _get_last_device_states(
+            self, address: str,
+            states: List[DeviceStateEntity]
+    ) -> Optional[DeviceStateEntity]:
+        """
+        端末のすべての検索結果から、最新の検索結果を取得する
+        Google Spread Sheetへのアクセス回数を減らすために、このメソッドを使用する
+        """
+        # 端末に対応する検索結果
+        device_states = list(filter(lambda s: s.address == address, states))
+
+        if len(device_states) == 0:
+            return None
+
+        # 検索結果を、日付が新しい順にソート
+        return max(states, key=lambda s: s.created_at)

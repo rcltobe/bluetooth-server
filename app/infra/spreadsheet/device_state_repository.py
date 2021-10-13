@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List
 
 from app.domain.repository.device_state_repository import AbstractDeviceStateRepository, DeviceStateEntity
 from app.infra.spreadsheet.spreadsheet_util import SpreadSheetUtil
@@ -11,18 +11,24 @@ class SpreadSheetDeviceStateRepository(AbstractDeviceStateRepository):
     """
     spreadsheet_util = SpreadSheetUtil(4, "attendance")
 
-    async def find_last(self, address: str) -> Optional[DeviceStateEntity]:
-        cells = await self.spreadsheet_util.find_all(address, 2)
+    async def find_all(self) -> List[DeviceStateEntity]:
+        cells = await self.spreadsheet_util.get_values()
         if len(cells) == 0:
-            return None
+            return []
+        states = [DeviceStateEntity.from_csv(row) for row in cells]
+        return [state for state in states if state is not None]
 
-        # 最後のデータの行番号を取得
-        row_numbers = [cell.row for cell in cells]
-        last_row_number = max(row_numbers)
+    async def save_all(self, states: List[DeviceStateEntity]):
+        values = [state.to_csv() for state in states]
+        await self.spreadsheet_util.append_all_values(values)
 
-        values = await self.spreadsheet_util.get_row(last_row_number)
-        entity = DeviceStateEntity.from_csv(values)
-        return entity
+    async def delete_before(self, time_in_mills: int):
+        states = await self.find_all()
 
-    async def save(self, state: DeviceStateEntity):
-        await self.spreadsheet_util.append_values(state.to_csv())
+        row_for_delete = 1
+        for state in states:
+            if int(state.created_at) > time_in_mills:
+                break
+            row_for_delete += 1
+
+        await self.spreadsheet_util.delete_rows(1, row_for_delete)
