@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Any, Callable
@@ -9,15 +10,6 @@ import gspread_asyncio
 from google.oauth2.service_account import Credentials
 from gspread import Cell
 from gspread_asyncio import AsyncioGspreadWorksheet
-
-
-def _get_credentials():
-    credentials = Credentials.from_service_account_file(SpreadSheetUtil._get_credential_file_path())
-    scoped_credential = credentials.with_scopes([
-        'https://spreadsheets.google.com/feeds',
-        'https://www.googleapis.com/auth/drive'
-    ])
-    return scoped_credential
 
 
 async def _create_async(runnable: Callable[[], Any]) -> Any:
@@ -45,43 +37,50 @@ class SpreadSheetUtil:
 
     @classmethod
     def _get_spreadsheet_key(cls):
+        """
+        環境変数から、SpreadSheetのキーを取得(.envをファイルを参照)
+        """
         return os.environ.get("SPREADSHEET_KEY")
 
     @classmethod
     def _get_credential_file_path(cls):
+        """
+        環境変数から、秘密鍵のファイルパスを取得(.envをファイルを参照)
+        """
         return os.environ.get("CREDENTIAL_FILE_PATH")
+
+    @classmethod
+    def _get_credentials(cls):
+        credentials = Credentials.from_service_account_file(SpreadSheetUtil._get_credential_file_path())
+        scoped_credential = credentials.with_scopes([
+            'https://spreadsheets.google.com/feeds',
+            'https://www.googleapis.com/auth/drive'
+        ])
+        return scoped_credential
 
     async def _get_worksheet(self) -> AsyncioGspreadWorksheet:
         if self._client is None:
-            client_manager = gspread_asyncio.AsyncioGspreadClientManager(_get_credentials)
+            client_manager = gspread_asyncio.AsyncioGspreadClientManager(SpreadSheetUtil._get_credentials)
             self._client = await client_manager.authorize()
         book = await self._client.open_by_key(self._get_spreadsheet_key())
         return await book.worksheet(self.book_name)
 
-    async def find_all(self, value: str, column: int) -> List[Cell]:
-        """
-        column の値が valueであるすべてのセルを取得
-        """
-        worksheet = await self._get_worksheet()
-        result = await _create_async(lambda: worksheet.ws.findall(value, in_column=column))
-        return result
-
     async def get_values(self) -> List[List[str]]:
         """
-        ワークシートにあるすべての値を取得
+        ワークシートにあるすべての値を取得。
+        頻繁に呼び出してしまうと、一時的に停止させられる。
         """
+        logging.info("get values")
         worksheet = await self._get_worksheet()
         return await worksheet.get_all_values()
 
-    async def append_values(self, values: List[str]):
-        """
-        SpreadSheetに値を書き込む
-        :param values: 書き込む値
-        """
-        worksheet = await self._get_worksheet()
-        await worksheet.insert_row(values)
-
     async def append_all_values(self, values: List[List[str]]):
+        """
+        複数行に渡る値を保存
+        １行１行保存するよりも、リクエスト数を減らすことができる。
+        """
+        logging.info("append all values")
+
         row = len(await self.get_values()) + 1
 
         cells = []
@@ -93,36 +92,7 @@ class SpreadSheetUtil:
         worksheet = await self._get_worksheet()
         await worksheet.update_cells(cells)
 
-    async def get_row(self, row) -> List[str]:
-        """
-        値がvalueと一致する行を取得する
-        @:param value 検索する値
-        @:param column 添削する列番号
-        """
-        worksheet = await self._get_worksheet()
-        values = await worksheet.row_values(row)
-        return values
-
-    async def get_row_number_of(self, value: str, column: int) -> int:
-        """
-        値がvalueと一致するセルの行数を取得する
-        @:param value 検索する値
-        @:param column 添削する列番号
-        @:return 行数、見つからなかった場合は-1
-        """
-        worksheet = await self._get_worksheet()
-        column_values = await worksheet.col_values(column)
-        row = -1
-        for i, v in enumerate(column_values):
-            if v is not None and v == value:
-                row = i + 1
-
-        return row
-
-    async def clear_values(self, row: int):
-        worksheet = await self._get_worksheet()
-        await worksheet.delete_row(row)
-
     async def delete_rows(self, start_row: int, end_row: int):
+        logging.info("delete rows")
         worksheet = await self._get_worksheet()
         await worksheet.delete_rows(start_row, end_row)
