@@ -1,24 +1,25 @@
 from typing import List
 
-from app.domain.repository.device_state_repository import AbstractDeviceStateRepository, DeviceStateEntity
+from app.domain.models.device_state import DeviceState
+from app.domain.repository.device_state_repository import AbstractDeviceStateRepository
 from app.infra.spreadsheet.spreadsheet_util import SpreadSheetUtil
 
 
 class SpreadSheetDeviceStateRepository(AbstractDeviceStateRepository):
     """
     SpreadSheetのフォーマット
-    ID, MACアドレス, 端末を発見できたか（1or0）, 検索日時（Unix時間）
+    (ID, MACアドレス, 端末を発見できたか（1or0）, 検索日時（Unix時間）)
     """
     spreadsheet_util = SpreadSheetUtil(4, "attendance")
 
-    async def find_all(self) -> List[DeviceStateEntity]:
+    async def find_all(self) -> List[DeviceState]:
         cells = await self.spreadsheet_util.get_values()
         if len(cells) == 0:
             return []
-        states = [DeviceStateEntity.from_csv(row) for row in cells]
+        states = [DeviceState.from_csv(row) for row in cells]
         return [state for state in states if state is not None]
 
-    async def save_all(self, states: List[DeviceStateEntity]):
+    async def save_all(self, states: List[DeviceState]):
         values = [state.to_csv() for state in states]
         await self.spreadsheet_util.append_all_values(values)
 

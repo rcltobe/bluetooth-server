@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import List
 
-from app.domain.models.bluetooth import BluetoothDevice
+from app.domain.models.device import BluetoothDevice
 
 
 class AbstractDeviceRepository:
