@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from app.domain.models.bluetooth import BluetoothDevice
+from app.domain.models.device import BluetoothDevice
 
 
 class SpreadSheetUserEntity:
@@ -20,7 +20,7 @@ class SpreadSheetUserEntity:
             mac_address=csv[3]
         )
 
-    def toBluetoothDevice(self) -> BluetoothDevice:
+    def to_bluetooth_device(self) -> BluetoothDevice:
         return BluetoothDevice(
             user_id=self.user_id,
             address=self.mac_address
