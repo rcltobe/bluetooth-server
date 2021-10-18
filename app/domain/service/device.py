@@ -1,28 +1,20 @@
 import logging
 import time
-from typing import List, Optional
+from typing import Optional
 
+from app.domain.models.device_state import DeviceState
 from app.domain.repository.device_repository import AbstractDeviceRepository
-from app.domain.repository.device_state_repository import AbstractDeviceStateRepository, DeviceStateEntity
-from app.infra.bluetooth import scan_device
+from app.domain.repository.device_state_repository import AbstractDeviceStateRepository
+from app.infra.bluetooth.scanner import scan_device
 from app.infra.repository import RepositoryContainer
 
 
-class ScanResultEntity:
-    def __init__(self, user_id: str, address: str, found: bool):
-        self.user_id = user_id
-        self.address = address
-        self.found = found
-
-    def to_json(self):
-        return {
-            "user_id": self.user_id,
-            "address": self.address,
-            "found": self.found
-        }
-
-
 class DeviceService:
+    """
+    端末のスキャン処理と、スキャン結果の保存を行う
+    SpreadSheetに過度なアクセスをしないように実装されている。
+    """
+
     def __init__(self,
                  device_repository: AbstractDeviceRepository = RepositoryContainer.device_repository,
                  state_repository: AbstractDeviceStateRepository = RepositoryContainer.device_state_repository,
@@ -34,49 +26,64 @@ class DeviceService:
     INTERVAL_SCAN = 10 * 60  # 端末を発見してから次に検索するまでの間隔
     INTERVAL_UPDATE = 10 * 60  # 状態が変化していないときに、更新する間隔
 
-    async def scan_devices(self, addresses: Optional[List[str]] = None):
+    async def delete_results_before(self, time_in_mills):
+        self.logger.info(f"delete result before {time_in_mills}")
+        await self.state_repository.delete_before(time_in_mills)
+
+    async def scan_devices(self):
         """
         Bluetooth端末を検索
 
         【注意】
         この処理を同時に呼ぶと、正しい結果を得ることができない
-
-        :param addresses: 検索する端末のMACアドレス, Noneの場合は、登録された端末を検索する
         """
         # 登録されたすべての端末のMACアドレスを取得
-        if addresses is None:
-            devices = await self.device_repository.find_all()
-            addresses = [device.address for device in devices]
+        devices = await self.device_repository.find_all()
+        addresses = [device.address for device in devices]
 
         self.logger.info(f"SCAN FOR {addresses}")
 
         # 端末をBluetoothでスキャンする
+        all_states = await self.state_repository.find_all()
+        scan_results = []
         for address in addresses:
-            await self._scan_device(address)
+            last_state = DeviceState.get_last_device_states(address, all_states)
+            result = await self._scan_device(address, last_state)
+            if result is not None:
+                scan_results.append(result)
 
-    async def _scan_device(self, address: str):
+        # 保存が必要な結果のみを抽出
+        results_for_updates = []
+        for result in scan_results:
+            prev_state = DeviceState.get_last_device_states(result.address, all_states)
+            if result.should_update_state(prev_state):
+                p = f"{prev_state.found}" if prev_state else "NONE"
+                self.logger.info(f"UPDATE {result.address}({p} -> {result.found})")
+                results_for_updates.append(result)
+
+        # スキャン結果を保存
+        await self.state_repository.save_all(results_for_updates)
+
+    async def _scan_device(self, address: str, prev_state: Optional[DeviceState]) -> Optional[DeviceState]:
+        """
+        付近に端末がいるかどうか、スキャンする
+        @:param prev_state 前回のスキャン結果
+        @:return スキャン結果（10分以内に発見されている場合はNoneを返す）
+        """
         # 10分以内に発見されていたら、スキャンせずに、前の結果を使う
-        state = await self.state_repository.find_last(address)
-        if state is not None \
-                and state.created_at >= time.time() - self.INTERVAL_SCAN \
-                and state.found:
-            self.logger.info(f"SCAN(USE CACHE) {state.to_json()}")
-            return
+        if prev_state is not None \
+                and prev_state.created_at >= time.time() - self.INTERVAL_SCAN \
+                and prev_state.found:
+            self.logger.info(f"SCAN(USE CACHE) {prev_state.to_json()}")
+            return None
 
         # スキャン
-        result = scan_device(address=address)
-        await self.update_state(address=address, found=result.found)
-        self.logger.info(f"DEVICE SCANNED {result.to_json()}")
+        try:
+            result = scan_device(address=address)
+        except Exception as e:
+            logging.error(e)
+            return None
 
-    async def update_state(self, address: str, found: bool):
-        prev_entity = await self.state_repository.find_last(address)
-        new_entity = DeviceStateEntity(address=address, found=found)
-        # 初回のデータ、または、端末を発見した場合は更新する。
-        if prev_entity is None or found:
-            await self.state_repository.save(new_entity)
-            return
-
-        # 前回と状態が変化していれば更新する(連続して発見できていないときは保存されないようにする)
-        if prev_entity.found != found:
-            await self.state_repository.save(new_entity)
-            return
+        prev_state = DeviceState(address=address, found=result.found)
+        self.logger.info(f"DEVICE SCANNED {prev_state.to_json()}")
+        return prev_state
