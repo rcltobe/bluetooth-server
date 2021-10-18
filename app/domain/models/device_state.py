@@ -43,11 +43,11 @@ class DeviceState:
         """
         検索結果を更新すべきかどうかを判定する
         """
-        assert self.address == prev_result.address
-
-        # 初回のデータの場合は更新する。
         if prev_result is None:
+            # 初回のデータの場合は更新する。
             return True
+        else:
+            assert self.address == prev_result.address
 
         # 前回と状態が変化していれば更新する
         if prev_result.found != self.found:
