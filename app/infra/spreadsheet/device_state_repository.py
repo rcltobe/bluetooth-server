@@ -2,6 +2,7 @@ from typing import List
 
 from app.domain.models.device_state import DeviceState
 from app.domain.repository.device_state_repository import AbstractDeviceStateRepository
+from app.infra.spreadsheet.models.device_state_entity import DeviceStateEntity
 from app.infra.spreadsheet.spreadsheet_util import SpreadSheetUtil
 
 
@@ -16,20 +17,21 @@ class SpreadSheetDeviceStateRepository(AbstractDeviceStateRepository):
         cells = await self.spreadsheet_util.get_values()
         if len(cells) == 0:
             return []
-        states = [DeviceState.from_csv(row) for row in cells]
-        return [state for state in states if state is not None]
+        entities = [DeviceStateEntity.from_csv(row) for row in cells]
+        entities = [entity for entity in entities if entity is not None]
+        return [entity.to_device_state() for entity in entities]
 
     async def save_all(self, states: List[DeviceState]):
-        values = [state.to_csv() for state in states]
+        entities = [DeviceStateEntity.from_device_state(state) for state in states]
+        values = [entity.to_csv() for entity in entities]
         await self.spreadsheet_util.append_all_values(values)
 
     async def delete_before(self, time_in_mills: int):
         states = await self.find_all()
 
-        row_for_delete = 1
-        for state in states:
-            if int(state.created_at) > time_in_mills:
-                break
-            row_for_delete += 1
+        row_for_delete = [state for state in states if int(state.created_at) <= time_in_mills]
+        if len(row_for_delete) == 0:
+            # 削除するものが何もない場合は、何もしない
+            return
 
-        await self.spreadsheet_util.delete_rows(1, row_for_delete)
+        await self.spreadsheet_util.delete_rows(1, len(row_for_delete))

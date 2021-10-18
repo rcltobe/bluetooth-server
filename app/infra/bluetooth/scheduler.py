@@ -30,7 +30,7 @@ class BluetoothScanScheduler:
         while True:
             await self._scan_devices(self.INTERVAL_SCAN)
 
-            # 1時間ごとに、今から2日前の出席データを削除する
+            # 1時間ごとに、SAVE_RESULT_SPANで指定した期間の出席データを削除する
             now = time.time()
             if now < next_delete:
                 await self.service.delete_results_before(time.time() - self.SAVE_RESULT_SPAN)

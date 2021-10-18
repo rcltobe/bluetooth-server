@@ -8,7 +8,6 @@ from typing import List, Any, Callable
 
 import gspread_asyncio
 from google.oauth2.service_account import Credentials
-from gspread import Cell
 from gspread_asyncio import AsyncioGspreadWorksheet
 
 
@@ -70,9 +69,10 @@ class SpreadSheetUtil:
         ワークシートにあるすべての値を取得。
         頻繁に呼び出してしまうと、一時的に停止させられる。
         """
-        logging.info("get values")
         worksheet = await self._get_worksheet()
-        return await worksheet.get_all_values()
+        values = await worksheet.get_all_values()
+        logging.info(f"get values({len(values)} rows)")
+        return values
 
     async def append_all_values(self, values: List[List[str]]):
         """
@@ -80,17 +80,8 @@ class SpreadSheetUtil:
         １行１行保存するよりも、リクエスト数を減らすことができる。
         """
         logging.info("append all values")
-
-        row = len(await self.get_values()) + 1
-
-        cells = []
-        for row_i in range(len(values)):
-            row_values = values[row_i]
-            row_cells = [Cell(row_i + row, i + 1, row_values[i]) for i in range(0, len(row_values))]
-            cells.extend(row_cells)
-
         worksheet = await self._get_worksheet()
-        await worksheet.update_cells(cells)
+        await worksheet.append_rows(values)
 
     async def delete_rows(self, start_row: int, end_row: int):
         logging.info("delete rows")

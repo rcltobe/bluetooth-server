@@ -57,16 +57,18 @@ class DeviceService:
         for result in scan_results:
             prev_state = DeviceState.get_last_device_states(result.address, all_states)
             if result.should_update_state(prev_state):
+                p = f"{prev_state.found}" if prev_state else "NONE"
+                self.logger.info(f"UPDATE {result.address}({p} -> {result.found})")
                 results_for_updates.append(result)
 
         # スキャン結果を保存
         await self.state_repository.save_all(results_for_updates)
 
-    async def _scan_device(self, address: str, prev_state: DeviceState) -> Optional[DeviceState]:
+    async def _scan_device(self, address: str, prev_state: Optional[DeviceState]) -> Optional[DeviceState]:
         """
         付近に端末がいるかどうか、スキャンする
         @:param prev_state 前回のスキャン結果
-        @:return スキャン結果（前回のスキャンと結果が変わらない場合はNoneを返す）
+        @:return スキャン結果（10分以内に発見されている場合はNoneを返す）
         """
         # 10分以内に発見されていたら、スキャンせずに、前の結果を使う
         if prev_state is not None \
@@ -76,7 +78,12 @@ class DeviceService:
             return None
 
         # スキャン
-        result = scan_device(address=address)
+        try:
+            result = scan_device(address=address)
+        except Exception as e:
+            logging.error(e)
+            return None
+
         prev_state = DeviceState(address=address, found=result.found)
         self.logger.info(f"DEVICE SCANNED {prev_state.to_json()}")
         return prev_state
