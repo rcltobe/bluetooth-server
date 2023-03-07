@@ -1,8 +1,10 @@
+from typing import List
+
 from app.domain.models.attendance_log import AttendanceLog
 from app.domain.util.datetime import datetime_now
 from app.infra.spreadsheet.models.attendance_log_entity import AttendanceLogEntity
 from app.infra.spreadsheet.spreadsheet_util import SpreadSheetUtil
-from typing import List
+
 
 class SpreadSheetAttendanceLogRepository:
     """
@@ -27,7 +29,7 @@ class SpreadSheetAttendanceLogRepository:
 
     async def update_logs_today(self, attendance_logs: List[AttendanceLog]):
         # reset all values
-        await self.spreadsheet_util_today.delete_rows(0, 1000000)
+        await self.spreadsheet_util_today.delete_rows(1, len(attendance_logs))
 
         # set values
         await self.spreadsheet_util_today.append_all_values([
@@ -38,4 +40,4 @@ class SpreadSheetAttendanceLogRepository:
     async def archive_logs(self):
         log_of_today = await self.fetch_logs_of_today()
         await self.spreadsheet_util_archive.append_all_values([log.to_csv() for log in log_of_today])
-        await self.spreadsheet_util_today.delete_rows(0, 100000)
+        await self.spreadsheet_util_today.delete_rows(1, len(log_of_today))
