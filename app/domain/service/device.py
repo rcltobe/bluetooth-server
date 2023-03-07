@@ -47,7 +47,9 @@ class DeviceService:
         for user in users:
             prev_log: Optional[AttendanceLog] = bluetooth_address_to_log.get(user.address)
             try:
-                attendance_log = self._scan_device(user=user, prev_attendance_log=prev_log)
+                attendance_log = await self._scan_device(user=user, prev_attendance_log=prev_log)
+                if attendance_log is None:
+                    continue
                 attendance_logs.append(attendance_log)
             except Exception as e:
                 logging.error(e)
@@ -62,7 +64,7 @@ class DeviceService:
             self,
             user: User,
             prev_attendance_log: Optional[AttendanceLog]
-    ) -> AttendanceLog:
+    ) -> Optional[AttendanceLog]:
         """
         付近に端末がいるかどうか、スキャンする
         @:param prev_state 前回のスキャン結果
@@ -71,9 +73,13 @@ class DeviceService:
         # スキャン
         result = scan_device(address=user.address)
 
+        if prev_attendance_log is None and result.found:
+            return
+
         if prev_attendance_log is None:
             attendance_log = AttendanceLog(
                 user_id=user.user_id,
+                user_name=user.user_name,
                 bluetooth_mac_address=user.address,
                 in_at=int(time.time()),
                 out_at=None,
