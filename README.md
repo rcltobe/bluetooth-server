@@ -26,7 +26,8 @@ pip3 install -r requirements.txt
 
 ## 環境変数
 
-|環境変数名|説明|
-|---|---|
-|CREDENTIAL_FILE_PATH|サービスアカウントのパス|
-|SPREADSHEET_KEY|SpreadSheetのキー（URLのXXXとなっている部分 https://docs.google.com/spreadsheets/d/XXXXXX/edit#gid=0)|
+|環境変数名| 説明                                                                                       |
+|---|------------------------------------------------------------------------------------------|
+|CREDENTIAL_FILE_PATH| サービスアカウントのパス                                                                             |
+|SPREADSHEET_KEY| SpreadSheetのキー（URLのXXXとなっている部分 https://docs.google.com/spreadsheets/d/XXXXXX/edit#gid=0) |
+|DISCORD_ATTENDANCE_LOG_WEBHOOK| Discordのattending_logのWebhookURL                                                         |
