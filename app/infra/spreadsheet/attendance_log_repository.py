@@ -7,7 +7,7 @@ from typing import List
 class SpreadSheetAttendanceLogRepository:
     """
     SpreadSheetのフォーマット
-    (AttendanceID, MACアドレス, 入室時刻, 退出時刻(nullable))
+    (AttendanceID, Name, MACアドレス, 入室時刻, 退出時刻(nullable))
     """
     spreadsheet_util_today = SpreadSheetUtil(4, "attendance")
     spreadsheet_util_archive = SpreadSheetUtil(4, "attendance_archive")
@@ -20,7 +20,7 @@ class SpreadSheetAttendanceLogRepository:
         today_end = now.replace(hour=23, minute=59, second=59, microsecond=0)
         logs_of_today = [
             row for row in rows
-            if int(today_start.timestamp()) <= int(row[2]) <= int(today_end.timestamp())
+            if int(today_start.timestamp()) <= int(row[3]) <= int(today_end.timestamp())
         ]
 
         return [AttendanceLogEntity.from_csv(log).to_attendance_log() for log in logs_of_today]
