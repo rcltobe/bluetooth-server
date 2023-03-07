@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta, timezone
-
 from app.domain.models.attendance_log import AttendanceLog
 from app.domain.util.datetime import datetime_now
 from app.infra.spreadsheet.models.attendance_log_entity import AttendanceLogEntity
