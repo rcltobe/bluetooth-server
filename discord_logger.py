@@ -4,7 +4,7 @@ import os
 
 import dotenv
 
-from app.application.attendance_log_in_day import AttendanceLogInDay
+from app.application.notify_discord import AttendanceLogInDay
 
 
 async def main():
