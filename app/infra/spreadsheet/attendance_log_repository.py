@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from app.domain.models.attendance_log import AttendanceLog
+from app.infra.spreadsheet.models.attendance_log_entity import AttendanceLogEntity
 from app.infra.spreadsheet.spreadsheet_util import SpreadSheetUtil
 
 
@@ -9,10 +10,11 @@ class SpreadSheetAttendanceLogRepository:
     SpreadSheetのフォーマット
     (AttendanceID, MACアドレス, 入室時刻, 退出時刻(nullable))
     """
-    spreadsheet_util = SpreadSheetUtil(4, "attendance_new")
+    spreadsheet_util_today = SpreadSheetUtil(4, "attendance_new")
+    spreadsheet_util_archive = SpreadSheetUtil(4, "attendance_archive")
 
     async def fetch_logs_of_today(self) -> list[AttendanceLog]:
-        rows = await self.spreadsheet_util.get_values()
+        rows = await self.spreadsheet_util_today.get_values()
 
         t_delta = timedelta(hours=9)
         JST = timezone(t_delta, 'JST')
@@ -24,10 +26,13 @@ class SpreadSheetAttendanceLogRepository:
             if int(today_start.timestamp()) <= int(row[2]) <= int(today_end.timestamp())
         ]
 
-        return [
-            AttendanceLog(
-                bluetooth_mac_address=log[1],
-                in_at=int(log[2]),
-                out_at=int(log[3]) if len(log) >= 4 and log[3] != "" else None
-            ) for log in logs_of_today
-        ]
+        return [AttendanceLogEntity.from_csv(log).to_attendance_log() for log in logs_of_today]
+
+    async def update_logs_today(self, attendance_logs: list[AttendanceLog]):
+        # reset all values
+        await self.spreadsheet_util_today.delete_rows(0, 1000000)
+
+        # set values
+        await self.spreadsheet_util_today.append_all_values([
+            log.to_csv() for log in attendance_logs
+        ])
