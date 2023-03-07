@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import time
-import uuid
 from typing import Optional, List
 
 
@@ -12,8 +11,7 @@ class DeviceState:
     @:param found 端末が付近にあった場合はTrue
     """
 
-    def __init__(self, address: str, found: bool, id: Optional[str] = None, created_at: Optional[float] = None):
-        self.id = str(uuid.uuid4()) if id is None else id
+    def __init__(self, address: str, found: bool, created_at: Optional[float] = None):
         self.created_at: float = time.time() if created_at is None else created_at
         self.address: str = address
         self.found = found
@@ -33,7 +31,6 @@ class DeviceState:
 
     def to_json(self):
         return {
-            "id": self.id,
             "address": self.address,
             "found": self.found,
             "createdAt": int(self.created_at),
