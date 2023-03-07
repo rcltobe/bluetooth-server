@@ -5,7 +5,7 @@ from typing import Optional
 
 from app.domain.models.attendance_log import AttendanceLog
 from app.infra.spreadsheet.models.spreadsheet_entity import SpreadSheetEntity
-
+from typing import List
 
 @dataclass
 class AttendanceLogEntity(SpreadSheetEntity):
@@ -24,7 +24,7 @@ class AttendanceLogEntity(SpreadSheetEntity):
         )
 
     @classmethod
-    def from_csv(cls, csv: list[str]) -> AttendanceLogEntity:
+    def from_csv(cls, csv: List[str]) -> AttendanceLogEntity:
         return AttendanceLogEntity(
             user_id=csv[0],
             bluetooth_mac_address=csv[1],
