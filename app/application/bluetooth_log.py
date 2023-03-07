@@ -1,11 +1,10 @@
-import asyncio
 import logging
 import time
 
 from app.domain.service.device import DeviceService
 
 
-class BluetoothScanScheduler:
+class BluetoothLogTask:
     """
     一定時間ごと、付近の端末をスキャンし、その結果を保存する。
     """
@@ -22,19 +21,9 @@ class BluetoothScanScheduler:
     def __init__(self):
         self.service = DeviceService()
 
-    def run_sync(self):
-        asyncio.run(self.run())
-
     async def run(self):
-        next_delete = time.time() + self.SECONDS_HOUR
         while True:
             await self._scan_devices(self.INTERVAL_SCAN)
-
-            # 1時間ごとに、SAVE_RESULT_SPANで指定した期間の出席データを削除する
-            now = time.time()
-            if now < next_delete:
-                await self.service.delete_results_before(time.time() - self.SAVE_RESULT_SPAN)
-                next_delete += self.SECONDS_HOUR
 
     async def _scan_devices(self, interval: int):
         logging.info("START SCAN")
