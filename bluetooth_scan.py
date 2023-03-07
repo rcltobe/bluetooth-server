@@ -9,7 +9,11 @@ from app.application.bluetooth_log import BluetoothLogTask
 
 async def main():
     # ロガーの初期化
-    logging.basicConfig(format='%(asctime)s[%(levelname)s]: %(message)s', level=logging.INFO)
+    logging.basicConfig(
+        filename="bluetooth.log",
+        format='%(asctime)s[%(levelname)s]: %(message)s',
+        level=logging.INFO
+    )
 
     # .envファイルを読み込み
     dotenv.load_dotenv(verbose=True)
