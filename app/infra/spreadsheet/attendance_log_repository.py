@@ -9,7 +9,7 @@ class SpreadSheetAttendanceLogRepository:
     SpreadSheetのフォーマット
     (AttendanceID, MACアドレス, 入室時刻, 退出時刻(nullable))
     """
-    spreadsheet_util_today = SpreadSheetUtil(4, "attendance_new")
+    spreadsheet_util_today = SpreadSheetUtil(4, "attendance")
     spreadsheet_util_archive = SpreadSheetUtil(4, "attendance_archive")
 
     async def fetch_logs_of_today(self) -> List[AttendanceLog]:
