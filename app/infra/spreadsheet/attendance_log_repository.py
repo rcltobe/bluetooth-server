@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from app.domain.models.attendance_log import AttendanceLog
+from app.domain.util.datetime import datetime_now
 from app.infra.spreadsheet.models.attendance_log_entity import AttendanceLogEntity
 from app.infra.spreadsheet.spreadsheet_util import SpreadSheetUtil
 
@@ -16,9 +17,7 @@ class SpreadSheetAttendanceLogRepository:
     async def fetch_logs_of_today(self) -> list[AttendanceLog]:
         rows = await self.spreadsheet_util_today.get_values()
 
-        t_delta = timedelta(hours=9)
-        JST = timezone(t_delta, 'JST')
-        now = datetime.now(JST)
+        now = datetime_now()
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         today_end = now.replace(hour=23, minute=59, second=59, microsecond=0)
         logs_of_today = [
