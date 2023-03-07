@@ -30,4 +30,7 @@ class AttendanceLog:
         }
 
     def to_csv(self):
-        return [self.user_id, self.bluetooth_mac_address, self.in_at, self.out_at]
+        if self.out_at is not None:
+            return [self.user_id, self.bluetooth_mac_address, self.in_at, self.out_at]
+        else:
+            return [self.user_id, self.bluetooth_mac_address, self.in_at]
