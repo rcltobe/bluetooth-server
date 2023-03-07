@@ -1,5 +1,4 @@
 import logging
-import time
 from typing import Optional
 
 from app.domain.models.attendance_log import AttendanceLog
@@ -73,20 +72,14 @@ class DeviceService:
         # スキャン
         result = scan_device(address=user.address)
 
-        if prev_attendance_log is None and result.found:
-            return
-
-        if prev_attendance_log is None:
-            attendance_log = AttendanceLog(
-                user_id=user.user_id,
-                user_name=user.user_name,
-                bluetooth_mac_address=user.address,
-                in_at=int(time.time()),
-                out_at=None,
-            )
+        attendance_log = AttendanceLog.create_attendance_log(
+            prev_attendance_log=prev_attendance_log,
+            user=user,
+            is_found=result.found
+        )
+        if attendance_log is not None:
+            self.logger.info(f"DEVICE SCANNED {attendance_log.to_json()}")
         else:
-            prev_attendance_log.update_log(result.found)
-            attendance_log = prev_attendance_log
+            self.logger.info(f"DEVICE SCANNED -> NOT FOUND {user.user_name}:{user.address}")
 
-        self.logger.info(f"DEVICE SCANNED {attendance_log.to_json()}")
         return attendance_log
