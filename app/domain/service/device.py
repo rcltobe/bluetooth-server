@@ -51,7 +51,7 @@ class DeviceService:
                     continue
                 attendance_logs.append(attendance_log)
             except Exception as e:
-                logging.error(e)
+                logging.error(e, stack_info=True)
                 if prev_log is None:
                     continue
                 attendance_logs.append(prev_log)

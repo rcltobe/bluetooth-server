@@ -42,7 +42,7 @@ class BluetoothLogTask:
         try:
             await self.service.scan_devices()
         except Exception as e:
-            logging.error(e)
+            logging.error(e, stack_info=True)
 
         logging.info("END SCAN")
         end = time.time()

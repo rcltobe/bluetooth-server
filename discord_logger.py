@@ -32,7 +32,7 @@ async def main():
             logging.info("NOTIFY")
             await task.run()
         except Exception as e:
-            logging.error(e)
+            logging.error(e, stack_info=True)
 
         # 1回のサイクルに必ず一定時間かけることで、
         # 不必要な繰り返しをしないようにする
