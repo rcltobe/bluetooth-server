@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import List
 from typing import Optional
 
 from app.domain.models.attendance_log import AttendanceLog
 from app.infra.spreadsheet.models.spreadsheet_entity import SpreadSheetEntity
-from typing import List
+
 
 @dataclass
 class AttendanceLogEntity(SpreadSheetEntity):
     user_id: str
+    user_name: str
     bluetooth_mac_address: str
     in_at: int
     out_at: Optional[int]
@@ -27,14 +29,16 @@ class AttendanceLogEntity(SpreadSheetEntity):
     def from_csv(cls, csv: List[str]) -> AttendanceLogEntity:
         return AttendanceLogEntity(
             user_id=csv[0],
-            bluetooth_mac_address=csv[1],
-            in_at=int(csv[2]),
-            out_at=int(csv[3]) if len(csv) >= 4 and csv[3] != "" else None
+            user_name=csv[1],
+            bluetooth_mac_address=csv[2],
+            in_at=int(csv[3]),
+            out_at=int(csv[4]) if len(csv) >= 5 and csv[4] != "" else None
         )
 
     def to_attendance_log(self):
         return AttendanceLog(
             user_id=self.user_id,
+            user_name=self.user_name,
             bluetooth_mac_address=self.bluetooth_mac_address,
             in_at=self.in_at,
             out_at=self.out_at,

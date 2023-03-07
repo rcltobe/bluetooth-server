@@ -9,10 +9,10 @@ from app.infra.spreadsheet.user_repository import SpreadSheetUserRepository
 class AttendanceLogInDay:
     _attendance_log_repository = SpreadSheetAttendanceLogRepository()
     _user_repository = SpreadSheetUserRepository()
-    _cache_bluetooth_address_to_name = {}
     _notified_logs = {}
 
-    discord_client = DiscordClient(os.environ.get("DISCORD_ATTENDANCE_LOG_WEBHOOK"))
+    def __init__(self):
+        self.discord_client = DiscordClient(webhook_url=os.environ.get("DISCORD_ATTENDANCE_LOG_WEBHOOK"))
 
     """
     1日の出席ログをスキャン
@@ -22,7 +22,7 @@ class AttendanceLogInDay:
         # 出席を確認
         attendance_logs_today = await self._attendance_log_repository.fetch_logs_of_today()
         for attendance_log in attendance_logs_today:
-            user_name = await self._fetch_user_name_by_bluetooth_address(attendance_log.bluetooth_mac_address)
+            user_name = attendance_log.user_name
 
             # 既に通知した人に関してはログを取らない
             did_notified = user_name in self._notified_logs
@@ -33,11 +33,3 @@ class AttendanceLogInDay:
             # Discordに通知
             self.discord_client.send_message(f"{user_name}の出席を確認しました")
             self._notified_logs[user_name] = datetime_today()
-
-    async def _fetch_user_name_by_bluetooth_address(self, bluetooth_mac: str) -> str:
-        if bluetooth_mac not in self._cache_bluetooth_address_to_name:
-            users = await self._user_repository.find_all()
-            for user in users:
-                self._cache_bluetooth_address_to_name[user.address] = user.user_name
-
-        return self._cache_bluetooth_address_to_name[bluetooth_mac]

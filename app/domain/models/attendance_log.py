@@ -8,6 +8,7 @@ from typing import Optional
 @dataclass
 class AttendanceLog:
     user_id: str
+    user_name: str
     bluetooth_mac_address: str
     in_at: int
     out_at: Optional[int]
@@ -24,6 +25,7 @@ class AttendanceLog:
     def to_json(self):
         return {
             "user_id": self.user_id,
+            "user_name": self.user_name,
             "bluetooth_address": self.bluetooth_mac_address,
             "in": self.in_at,
             "out": self.out_at
@@ -31,6 +33,6 @@ class AttendanceLog:
 
     def to_csv(self):
         if self.out_at is not None:
-            return [self.user_id, self.bluetooth_mac_address, self.in_at, self.out_at]
+            return [self.user_id, self.user_name, self.bluetooth_mac_address, self.in_at, self.out_at]
         else:
-            return [self.user_id, self.bluetooth_mac_address, self.in_at]
+            return [self.user_id, self.user_name, self.bluetooth_mac_address, self.in_at]
