@@ -29,7 +29,8 @@ class SpreadSheetAttendanceLogRepository:
 
     async def update_logs_today(self, attendance_logs: List[AttendanceLog]):
         # reset all values
-        await self.spreadsheet_util_today.delete_rows(1, len(attendance_logs))
+        if len(attendance_logs) >= 1:
+            await self.spreadsheet_util_today.delete_rows(1, len(attendance_logs))
 
         # set values
         await self.spreadsheet_util_today.append_all_values([
@@ -38,6 +39,8 @@ class SpreadSheetAttendanceLogRepository:
 
     # 本日分のログをアーカイブする
     async def archive_logs(self):
-        log_of_today = await self.fetch_logs_of_today()
-        await self.spreadsheet_util_archive.append_all_values([log.to_csv() for log in log_of_today])
-        await self.spreadsheet_util_today.delete_rows(1, len(log_of_today))
+        logs_of_today = await self.fetch_logs_of_today()
+        await self.spreadsheet_util_archive.append_all_values([log.to_csv() for log in logs_of_today])
+
+        if len(logs_of_today) >= 1:
+            await self.spreadsheet_util_today.delete_rows(1, len(logs_of_today))
