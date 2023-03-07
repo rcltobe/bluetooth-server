@@ -3,7 +3,7 @@ import time
 from typing import Optional
 
 from app.domain.models.device_state import DeviceState
-from app.domain.repository.device_repository import AbstractDeviceRepository
+from app.domain.repository.user_repository import AbstractUserRepository
 from app.domain.repository.device_state_repository import AbstractDeviceStateRepository
 from app.infra.bluetooth.scanner import scan_device
 from app.infra.repository import RepositoryContainer
@@ -16,10 +16,10 @@ class DeviceService:
     """
 
     def __init__(self,
-                 device_repository: AbstractDeviceRepository = RepositoryContainer.device_repository,
+                 user_repository: AbstractUserRepository = RepositoryContainer.device_repository,
                  state_repository: AbstractDeviceStateRepository = RepositoryContainer.device_state_repository,
                  ):
-        self.device_repository = device_repository
+        self.user_repository = user_repository
         self.state_repository = state_repository
         self.logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class DeviceService:
         この処理を同時に呼ぶと、正しい結果を得ることができない
         """
         # 登録されたすべての端末のMACアドレスを取得
-        devices = await self.device_repository.find_all()
+        devices = await self.user_repository.find_all()
         addresses = [device.address for device in devices]
 
         self.logger.info(f"SCAN FOR {addresses}")

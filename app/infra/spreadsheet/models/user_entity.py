@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from app.domain.models.device import BluetoothDevice
+from app.domain.models.user import User
 from app.infra.spreadsheet.models.spreadsheet_entity import SpreadSheetEntity
 
 
@@ -12,8 +12,9 @@ class UserEntity(SpreadSheetEntity):
     (id, 名前, 学年, 端末のMACアドレス)
     """
 
-    def __init__(self, user_id: str, mac_address):
+    def __init__(self, user_id: str, user_name: str, mac_address: str):
         self.user_id = user_id
+        self.user_name = user_name
         self.mac_address = mac_address
 
     @classmethod
@@ -26,11 +27,13 @@ class UserEntity(SpreadSheetEntity):
 
         return UserEntity(
             user_id=csv[0],
+            user_name=csv[1],
             mac_address=csv[3]
         )
 
-    def to_bluetooth_device(self) -> BluetoothDevice:
-        return BluetoothDevice(
+    def to_bluetooth_device(self) -> User:
+        return User(
             user_id=self.user_id,
+            user_name=self.user_name,
             address=self.mac_address
         )

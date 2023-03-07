@@ -1,12 +1,12 @@
 from abc import abstractmethod
 from typing import List
 
-from app.domain.models.device import BluetoothDevice
+from app.domain.models.user import User
 
 
-class AbstractDeviceRepository:
+class AbstractUserRepository:
     @abstractmethod
-    async def find_all(self) -> List[BluetoothDevice]:
+    async def find_all(self) -> List[User]:
         """
         すべての端末を取得する
         """
