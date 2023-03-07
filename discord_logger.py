@@ -1,12 +1,13 @@
+import asyncio
 import logging
 import os
 
 import dotenv
 
-from app.infra.discord.discord_client import DiscordClient
+from app.application.attendance_log_in_day import AttendanceLogInDay
 
 
-def main():
+async def main():
     # ロガーの初期化
     logging.basicConfig(format='%(asctime)s[%(levelname)s]: %(message)s', level=logging.INFO)
 
@@ -15,9 +16,8 @@ def main():
     dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
     dotenv.load_dotenv(dotenv_path)
 
-    discord_client = DiscordClient(os.environ.get("DISCORD_ATTENDANCE_LOG_WEBHOOK"))
-    discord_client.send_message("Hello from python!")
-
+    task = AttendanceLogInDay()
+    await task.run()
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
