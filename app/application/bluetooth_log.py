@@ -1,17 +1,10 @@
 import logging
 import time
-from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from app.domain.service.device import DeviceService
+from app.domain.util.datetime import datetime_now, is_same_day
 from app.infra.spreadsheet.attendance_log_repository import SpreadSheetAttendanceLogRepository
-
-
-def datetime_now():
-    t_delta = timedelta(hours=9)
-    JST = timezone(t_delta, 'JST')
-    now = datetime.now(JST)
-    return now
 
 
 class BluetoothLogTask:
@@ -64,9 +57,5 @@ class BluetoothLogTask:
             return False
 
         now = datetime_now()
-        is_archived_today = \
-            self.last_archived_at.year == now.year and \
-            self.last_archived_at.month == now.month and \
-            self.last_archived_at.day == now.day
-
+        is_archived_today = is_same_day(now, self.last_archived_at)
         return is_archived_today
