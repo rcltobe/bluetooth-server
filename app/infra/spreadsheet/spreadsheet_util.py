@@ -83,7 +83,22 @@ class SpreadSheetUtil:
         worksheet = await self._get_worksheet()
         await worksheet.append_rows(values)
 
+    async def set_values(self, start_row: int, values: List[List[str]]):
+        logging.info(f"set values from row {start_row}")
+        worksheet = await self._get_worksheet()
+        cell_start = f"A{start_row}"
+        cell_end = f"{chr(ord('A') + self.num_columns - 1)}{start_row + len(values) - 1}"
+        await worksheet.update(f"{cell_start}:{cell_end}", values)
+
     async def delete_rows(self, start_row: int, end_row: int):
         logging.info("delete rows")
         worksheet = await self._get_worksheet()
         await worksheet.delete_rows(start_row, end_row)
+
+    async def clear_worksheet(self):
+        logging.info("append all values")
+        worksheet = await self._get_worksheet()
+        await worksheet.update(self.data_range, [
+            ["" for _ in range(self.num_columns)]
+            for _ in range(worksheet.row_count)
+        ])
