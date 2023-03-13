@@ -24,6 +24,7 @@ async def main():
     dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
     dotenv.load_dotenv(dotenv_path)
 
+    logging.info("Started Discord Logger")
     task = AttendanceLogInDay()
 
     while True:
@@ -39,7 +40,9 @@ async def main():
         end = time.time()
         if end - start < INTERVAL_NOTIFY:
             duration = end - start
-            time.sleep(INTERVAL_NOTIFY - duration)
+            time_to_sleep = INTERVAL_NOTIFY - duration
+            logging.info(f"Sleep for {int(time_to_sleep)}s")
+            time.sleep(time_to_sleep)
 
 
 if __name__ == '__main__':
