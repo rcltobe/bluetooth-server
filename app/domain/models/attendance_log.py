@@ -13,7 +13,6 @@ class AttendanceLog:
     user_name: str
     bluetooth_mac_address: str
     created_at: int
-    out_at: Optional[int]
     is_attending: bool 
 
     def to_json(self):
@@ -43,8 +42,11 @@ class AttendanceLog:
         prev_attendance_logs: Optional[List[AttendanceLog]],
         is_found: bool,
         user: User,
-        now=time.time()
+        now: Optional[int]
     ) -> Optional[AttendanceLog]:
+        if now is None:
+            now = int(time.time()) 
+            
         if prev_attendance_logs is None:
             prev_attendance_logs = []
 
@@ -72,7 +74,7 @@ class AttendanceLog:
             user_name=user.user_name,
             bluetooth_mac_address=user.address,
             is_attending=is_found,
-            created_at=int(now),
+            created_at=now,
         )
 
         return attendance_log

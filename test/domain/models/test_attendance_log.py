@@ -1,103 +1,132 @@
 import time
+import datetime
 import unittest
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from app.domain.models.attendance_log import AttendanceLog
 from app.domain.models.user import User
 
 
 class TestAttendanceLog(unittest.TestCase):
-    def test_update_attendance_log(self):
-        test_user = User(address="00:00:00:00", user_name="test", user_id="test")
-        in_at = int(time.time())
-        out_at = int(time.time()) + 1000
-        cases = [
-            UpdateAttendanceLogTestCase(
-                case="退出",
-                is_found=False,
-                base=AttendanceLog.from_user(user=test_user, in_at=in_at, out_at=None),
-                expect=AttendanceLog.from_user(user=test_user, in_at=in_at, out_at=out_at)
-            ),
-            UpdateAttendanceLogTestCase(
-                case="退出後に入室",
-                is_found=True,
-                base=AttendanceLog.from_user(user=test_user, in_at=in_at, out_at=out_at),
-                expect=AttendanceLog.from_user(user=test_user, in_at=in_at, out_at=None)
-            ),
-        ]
-
-        for case in cases:
-            case.base.update_log(is_attending=case.is_found, now=out_at)
-            self.assertEqual(case.base.created_at, case.expect.created_at)
-            self.assertEqual(case.base.out_at, case.expect.out_at)
-
     def test_create_attendance_log(self):
-        test_user = User(address="00:00:00:00", user_name="test", user_id="test")
-        now = int(time.time())
-        in_at = int(time.time())
-        out_at = int(time.time()) + 1000
+        test_user = User(
+            address="00:00:00:00",
+            user_name="test", 
+            user_id="test"
+        )
+
         cases = [
             CreateAttendanceLogTestCase(
                 case="出席",
                 user=test_user,
                 is_found=True,
-                prev_attendance_log=None,
-                expect=AttendanceLog.from_user(user=test_user, in_at=now, out_at=None)
+                now=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 12, 0, 0)),
+                prev_attendance_logs=None,
+                expect=AttendanceLog.from_user(
+                    user=test_user,
+                    created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 12, 0, 0)),
+                    is_attending=True,
+                )
             ),
             CreateAttendanceLogTestCase(
                 case="退出",
                 user=test_user,
                 is_found=False,
-                prev_attendance_log=AttendanceLog.from_user(user=test_user, in_at=in_at, out_at=None),
-                expect=AttendanceLog.from_user(user=test_user, in_at=in_at, out_at=now)
+                now=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 15, 0, 0)),
+                prev_attendance_logs=[
+                    AttendanceLog.from_user(
+                        user=test_user,
+                        is_attending=True,
+                        created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 12, 0, 0)),
+                    ),
+                ],
+                expect=AttendanceLog.from_user(
+                    user=test_user,
+                    is_attending=False,
+                    created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 15, 0, 0)),
+                )
             ),
             CreateAttendanceLogTestCase(
                 case="退出後に入室",
                 user=test_user,
                 is_found=True,
-                prev_attendance_log=AttendanceLog.from_user(user=test_user, in_at=in_at, out_at=out_at),
-                expect=AttendanceLog.from_user(user=test_user, in_at=in_at, out_at=None)
+                now=datetime.datetime(2024, 3, 1, 17, 0, 0),
+                prev_attendance_logs=[
+                    AttendanceLog.from_user(
+                        user=test_user, 
+                        created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 12, 0, 0)), 
+                        is_attending=True,
+                    ),
+                    AttendanceLog.from_user(
+                        user=test_user, 
+                        created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 15, 0, 0)),
+                        is_attending=False,
+                    ),
+                    AttendanceLog.from_user(
+                        user=test_user, 
+                        created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 16, 0, 0)),
+                        is_attending=False,
+                    ),
+                ],
+                expect=AttendanceLog.from_user(
+                    user=test_user, 
+                    created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 17, 0, 0)),
+                    is_attending=True,
+                )
             ),
             CreateAttendanceLogTestCase(
                 case="未出席",
                 user=test_user,
                 is_found=False,
-                prev_attendance_log=None,
-                expect=None
+                now=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 12, 0, 0)),
+                prev_attendance_logs=None,
+                expect=None,
             ),
         ]
 
         for case in cases:
-            result = AttendanceLog.create_attendance_log(
-                prev_attendance_log=case.prev_attendance_log,
+            actual = AttendanceLog.create_attendance_log(
+                prev_attendance_logs=case.prev_attendance_logs,
                 user=case.user,
                 is_found=case.is_found,
-                now=now
+                now=case.now,
             )
 
-            self.assertEqual(case.expect is not None, result is not None)
-            if result is None:
+            self.assertEqual(case.expect is not None, actual is not None)
+            if actual is None:
                 continue
 
-            self.assertEqual(case.expect.user_id, result.user_id, case.case)
-            self.assertEqual(case.expect.user_name, result.user_name, case.case)
-            self.assertEqual(case.expect.created_at, result.created_at, case.case)
-            self.assertEqual(case.expect.out_at, result.out_at, case.case)
+            self.assertEqual(
+                case.expect.user_id, 
+                actual.user_id,
+                case.case
+            )
+            self.assertEqual(
+                case.expect.user_name,
+                actual.user_name, 
+                case.case
+            )
+            self.assertEqual(
+                case.expect.is_attending,
+                actual.is_attending, 
+                case.case
+            )
+            self.assertEqual(
+                _timestamp_from_datetime(case.expect.created_at),
+                _timestamp_from_datetime(actual.created_at), 
+                case.case
+            )
 
-
-@dataclass
-class UpdateAttendanceLogTestCase:
-    case: str
-    base: AttendanceLog
-    is_found: bool
-    expect: AttendanceLog
-
-
+def _timestamp_from_datetime(dt: datetime.datetime) -> int:
+    if type(dt) is int:
+        return dt
+    return int(time.mktime(dt.timetuple()))
 @dataclass
 class CreateAttendanceLogTestCase:
     case: str
-    prev_attendance_log: Optional[AttendanceLog]
     user: User
     is_found: bool
+    now: int 
+    prev_attendance_logs: Optional[List[AttendanceLog]]
     expect: Optional[AttendanceLog]
