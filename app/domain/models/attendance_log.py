@@ -14,9 +14,9 @@ class AttendanceLog:
     user_id: str
     user_name: str
     bluetooth_mac_address: str
-    created_at: int
     is_attending: bool 
     room: str
+    created_at: int
 
     def is_todays_log(self) -> bool:
         return is_same_day(

@@ -48,7 +48,11 @@ class DeviceService:
 
         for user in users:
             try:
-                attendance_log = await self._scan_device(user=user, prev_attendance_log=attendance_logs_today, room=room)
+                attendance_log = await self._scan_device(
+                    user=user, 
+                    prev_attendance_log=attendance_logs_today, 
+                    room=room
+                )
                 if attendance_log is None:
                     continue
                 attendance_logs.append(attendance_log)
