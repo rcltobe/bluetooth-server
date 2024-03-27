@@ -29,7 +29,7 @@ class TestAttendanceLog(unittest.TestCase):
 
         for case in cases:
             case.base.update_log(is_attending=case.is_found, now=out_at)
-            self.assertEqual(case.base.in_at, case.expect.in_at)
+            self.assertEqual(case.base.created_at, case.expect.created_at)
             self.assertEqual(case.base.out_at, case.expect.out_at)
 
     def test_create_attendance_log(self):
@@ -82,7 +82,7 @@ class TestAttendanceLog(unittest.TestCase):
 
             self.assertEqual(case.expect.user_id, result.user_id, case.case)
             self.assertEqual(case.expect.user_name, result.user_name, case.case)
-            self.assertEqual(case.expect.in_at, result.in_at, case.case)
+            self.assertEqual(case.expect.created_at, result.created_at, case.case)
             self.assertEqual(case.expect.out_at, result.out_at, case.case)
 
 

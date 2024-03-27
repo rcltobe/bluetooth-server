@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from app.domain.models.attendance_log import AttendanceLog
 from app.domain.models.user import User
@@ -43,18 +43,16 @@ class DeviceService:
 
         # 端末をBluetoothでスキャンする
         attendance_logs = []
+        attendance_logs.append(attendance_logs_today)
+
         for user in users:
-            prev_log: Optional[AttendanceLog] = bluetooth_address_to_log.get(user.address)
             try:
-                attendance_log = await self._scan_device(user=user, prev_attendance_log=prev_log)
+                attendance_log = await self._scan_device(user=user, prev_attendance_log=attendance_logs_today)
                 if attendance_log is None:
                     continue
                 attendance_logs.append(attendance_log)
             except Exception as e:
                 logging.error(e, stack_info=True)
-                if prev_log is None:
-                    continue
-                attendance_logs.append(prev_log)
 
         # attendance logを更新する
         await self.attendance_log_repository.update_logs_today(attendance_logs)
@@ -62,7 +60,7 @@ class DeviceService:
     async def _scan_device(
             self,
             user: User,
-            prev_attendance_log: Optional[AttendanceLog]
+            prev_attendance_logs: Optional[List[AttendanceLog]]
     ) -> Optional[AttendanceLog]:
         """
         付近に端末がいるかどうか、スキャンする
@@ -73,13 +71,16 @@ class DeviceService:
         result = scan_device(address=user.address)
 
         attendance_log = AttendanceLog.create_attendance_log(
-            prev_attendance_log=prev_attendance_log,
+            prev_attendance_logs=prev_attendance_logs,
             user=user,
             is_found=result.found
         )
         if attendance_log is not None:
-            self.logger.info(f"DEVICE SCANNED {attendance_log.to_json()}")
+            if result.found:
+                self.logger.info(f"DEVICE SCANNED -> FOUND {user.user_name}:{user.address}")
+            else:
+                self.logger.info(f"DEVICE SCANNED -> NOT FOUND {user.user_name}:{user.address}")
         else:
-            self.logger.info(f"DEVICE SCANNED -> NOT FOUND {user.user_name}:{user.address}")
+            self.logger.info(f"DEVICE SCANNED -> NOT NOT LOGGED {user.user_name}:{user.address}")
 
         return attendance_log

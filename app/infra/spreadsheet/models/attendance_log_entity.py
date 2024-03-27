@@ -21,7 +21,7 @@ class AttendanceLogEntity(SpreadSheetEntity):
         return AttendanceLogEntity(
             user_id=attendance_log.user_id,
             bluetooth_mac_address=attendance_log.bluetooth_mac_address,
-            in_at=attendance_log.in_at,
+            in_at=attendance_log.created_at,
             out_at=attendance_log.out_at
         )
 
@@ -40,6 +40,6 @@ class AttendanceLogEntity(SpreadSheetEntity):
             user_id=self.user_id,
             user_name=self.user_name,
             bluetooth_mac_address=self.bluetooth_mac_address,
-            in_at=self.in_at,
+            created_at=self.in_at,
             out_at=self.out_at,
         )

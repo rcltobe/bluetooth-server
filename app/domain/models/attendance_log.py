@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from app.domain.models.user import User
 
@@ -12,64 +12,67 @@ class AttendanceLog:
     user_id: str
     user_name: str
     bluetooth_mac_address: str
-    in_at: int
+    created_at: int
     out_at: Optional[int]
-
-    def update_log(self, is_attending: bool, now=time.time()):
-        has_out_log = self.out_at is not None
-        # 退出した後に再度入室したら、退出の記録を削除する
-        if is_attending and has_out_log:
-            self.out_at = None
-        # 退出した（退出時間が更新されないように、退出記録がなかった場合だけ行う）
-        elif not is_attending and not has_out_log:
-            self.out_at = int(now)
+    is_attending: bool 
 
     def to_json(self):
         return {
             "user_id": self.user_id,
             "user_name": self.user_name,
             "bluetooth_address": self.bluetooth_mac_address,
-            "in": self.in_at,
-            "out": self.out_at
+            "is_attending": self.is_attending,
+            "created_at": self.created_at,
         }
 
     def to_csv(self):
-        if self.out_at is not None:
-            return [self.user_id, self.user_name, self.bluetooth_mac_address, self.in_at, self.out_at]
-        else:
-            return [self.user_id, self.user_name, self.bluetooth_mac_address, self.in_at]
+        return [self.user_id, self.user_name, self.bluetooth_mac_address, self.created_at, self.is_attending]
 
     @staticmethod
-    def from_user(user: User, in_at: int, out_at: Optional[int]) -> AttendanceLog:
+    def from_user(user: User, created_at: int, is_attending: bool) -> AttendanceLog:
         return AttendanceLog(
             user_id=user.user_id,
             user_name=user.user_name,
             bluetooth_mac_address=user.address,
-            in_at=in_at,
-            out_at=out_at
+            is_attending=is_attending,
+            created_at=created_at,
         )
 
     @staticmethod
     def create_attendance_log(
-            prev_attendance_log: Optional[AttendanceLog],
-            is_found: bool,
-            user: User,
-            now=time.time()
+        prev_attendance_logs: Optional[List[AttendanceLog]],
+        is_found: bool,
+        user: User,
+        now=time.time()
     ) -> Optional[AttendanceLog]:
+        if prev_attendance_logs is None:
+            prev_attendance_logs = []
+
+        prev_attendance_logs_of_user = [
+            log for log in prev_attendance_logs 
+            if log.user_id == user.user_id
+        ]
+        # sorted by created_at
+        prev_attendance_logs_of_user.sort(key=lambda log: log.created_at, reverse=True)
+
+        prev_attendance_log = None
+        if len(prev_attendance_logs_of_user) > 0:
+            prev_attendance_log = prev_attendance_logs_of_user[0]
+
         # まだ出席していない
         if prev_attendance_log is None and not is_found:
             return None
+        
+        # 前回の出席状態と同じ
+        if prev_attendance_log is not None and prev_attendance_log.is_attending == is_found:
+            return None
 
-        if prev_attendance_log is None:
-            attendance_log = AttendanceLog(
-                user_id=user.user_id,
-                user_name=user.user_name,
-                bluetooth_mac_address=user.address,
-                in_at=int(now),
-                out_at=None,
-            )
-        else:
-            prev_attendance_log.update_log(is_found, now=now)
-            attendance_log = prev_attendance_log
+        attendance_log = AttendanceLog(
+            user_id=user.user_id,
+            user_name=user.user_name,
+            bluetooth_mac_address=user.address,
+            is_attending=is_found,
+            created_at=int(now),
+        )
 
         return attendance_log
