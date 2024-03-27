@@ -24,16 +24,6 @@ class AttendanceLog:
             datetime.now()
         )
     
-    def to_json(self):
-        return {
-            "user_id": self.user_id,
-            "user_name": self.user_name,
-            "bluetooth_address": self.bluetooth_mac_address,
-            "is_attending": self.is_attending,
-            "room": self.room,
-            "created_at": self.created_at,
-        }
-
     def to_csv(self):
         return [
             self.user_id, 
