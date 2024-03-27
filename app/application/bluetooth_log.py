@@ -2,6 +2,7 @@ import logging
 import time
 from datetime import datetime
 from typing import Optional
+import os
 
 from app.domain.service.device import DeviceService
 from app.domain.util.datetime import datetime_now, is_same_day
@@ -29,18 +30,18 @@ class BluetoothLogTask:
 
     async def run(self):
         while True:
-            await self._scan_devices(self.INTERVAL_SCAN)
+            await self._scan_devices(self.INTERVAL_SCAN, room=os.environ.get("ROOM"))
 
             if not await self._did_archived_today():
                 await self.attendance_log_repository.archive_logs()
                 self.last_archived_at = datetime_now()
 
-    async def _scan_devices(self, interval: int):
+    async def _scan_devices(self, interval: int, room: str):
         logging.info("START SCAN")
         start = time.time()
 
         try:
-            await self.service.scan_devices()
+            await self.service.scan_devices(room=room)
         except Exception as e:
             logging.error(e, stack_info=True)
 

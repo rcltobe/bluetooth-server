@@ -22,19 +22,28 @@ class AttendanceLog:
             "user_name": self.user_name,
             "bluetooth_address": self.bluetooth_mac_address,
             "is_attending": self.is_attending,
+            "room": self.room,
             "created_at": self.created_at,
         }
 
     def to_csv(self):
-        return [self.user_id, self.user_name, self.bluetooth_mac_address, self.created_at, self.is_attending]
+        return [
+            self.user_id, 
+            self.user_name, 
+            self.bluetooth_mac_address, 
+            self.is_attending,
+            self.room,
+            self.created_at, 
+        ]
 
     @staticmethod
-    def from_user(user: User, created_at: int, is_attending: bool) -> AttendanceLog:
+    def from_user(user: User, created_at: int, is_attending: bool, room: str) -> AttendanceLog:
         return AttendanceLog(
             user_id=user.user_id,
             user_name=user.user_name,
             bluetooth_mac_address=user.address,
             is_attending=is_attending,
+            room=room,
             created_at=created_at,
         )
 
@@ -43,6 +52,7 @@ class AttendanceLog:
         prev_attendance_logs: Optional[List[AttendanceLog]],
         is_found: bool,
         user: User,
+        room: str,
         now: Optional[int]
     ) -> Optional[AttendanceLog]:
         if now is None:
@@ -75,6 +85,7 @@ class AttendanceLog:
             user_name=user.user_name,
             bluetooth_mac_address=user.address,
             is_attending=is_found,
+            room=room,
             created_at=now,
         )
 

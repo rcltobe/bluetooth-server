@@ -24,9 +24,11 @@ class DeviceService:
 
     INTERVAL_UPDATE = 10 * 60  # 状態が変化していないときに、更新する間隔
 
-    async def scan_devices(self):
+    async def scan_devices(self, room: str):
         """
         Bluetooth端末を検索
+
+        @param room 部屋名
 
         【注意】
         この処理を同時に呼ぶと、正しい結果を得ることができない
@@ -39,7 +41,6 @@ class DeviceService:
 
         # 本日分のAttendance Logを取得する
         attendance_logs_today = await self.attendance_log_repository.fetch_logs_of_today()
-        bluetooth_address_to_log = {log.bluetooth_mac_address: log for log in attendance_logs_today}
 
         # 端末をBluetoothでスキャンする
         attendance_logs = []
@@ -47,7 +48,7 @@ class DeviceService:
 
         for user in users:
             try:
-                attendance_log = await self._scan_device(user=user, prev_attendance_log=attendance_logs_today)
+                attendance_log = await self._scan_device(user=user, prev_attendance_log=attendance_logs_today, room=room)
                 if attendance_log is None:
                     continue
                 attendance_logs.append(attendance_log)
@@ -60,7 +61,8 @@ class DeviceService:
     async def _scan_device(
             self,
             user: User,
-            prev_attendance_logs: Optional[List[AttendanceLog]]
+            prev_attendance_logs: Optional[List[AttendanceLog]],
+            room: str
     ) -> Optional[AttendanceLog]:
         """
         付近に端末がいるかどうか、スキャンする
@@ -73,7 +75,8 @@ class DeviceService:
         attendance_log = AttendanceLog.create_attendance_log(
             prev_attendance_logs=prev_attendance_logs,
             user=user,
-            is_found=result.found
+            is_found=result.found,
+            room=room,
         )
         if attendance_log is not None:
             if result.found:
