@@ -31,7 +31,7 @@ async def main():
         start = time.time()
         try:
             logging.info("NOTIFY")
-            await task.run()
+            await task.run(room=os.getenv("ROOM"))
         except Exception as e:
             logging.error(e, stack_info=True)
 

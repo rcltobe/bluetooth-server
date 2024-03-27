@@ -30,17 +30,18 @@ class AttendanceLogInDay:
 
     """
     1日の出席ログをスキャン
+    @param room: 部屋名
     """
-
-    async def run(self):
+    async def run(self, room: str):
         self._remove_logs_before_today()
 
         # 出席ログを取得
         attendance_logs_today = await self._attendance_log_repository.fetch_logs_of_today()
+        attendance_logs_today_of_room = [log for log in attendance_logs_today if log.room == room]
 
         # ユーザーごとにログを分ける 
         attendance_logs_per_user = defaultdict(list)
-        for attendance_log in attendance_logs_today:
+        for attendance_log in attendance_logs_today_of_room:
             attendance_logs_per_user[attendance_log.user_name].append(attendance_log)
 
         # 通知

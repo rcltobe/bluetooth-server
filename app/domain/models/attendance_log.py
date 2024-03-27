@@ -14,6 +14,7 @@ class AttendanceLog:
     bluetooth_mac_address: str
     created_at: int
     is_attending: bool 
+    room: str
 
     def to_json(self):
         return {
