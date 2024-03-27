@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 from app.domain.models.attendance_log import AttendanceLog
@@ -17,8 +18,9 @@ class SpreadSheetAttendanceLogRepository:
     SpreadSheetのフォーマット
     (AttendanceID, Name, MACアドレス, 入室時刻, 退出時刻(nullable))
     """
-    spreadsheet_util_today = SpreadSheetUtil(4, "attendance")
-    spreadsheet_util_archive = SpreadSheetUtil(4, "attendance_archive")
+    def __init__(self) -> None:
+        self.spreadsheet_util_today = SpreadSheetUtil(4, book_name=os.environ.get("SPREADSHEET_BOOK_ATTENDANCE"))
+        self.spreadsheet_util_archive = SpreadSheetUtil(4, book_name=os.environ.get("SPREADSHEET_BOOK_ATTENDANCE_ARCHIVE"))
 
     async def fetch_logs_of_today(self) -> List[AttendanceLog]:
         rows = await self.spreadsheet_util_today.get_values()
