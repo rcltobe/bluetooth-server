@@ -3,8 +3,10 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from typing import List, Optional
+from datetime import datetime
 
 from app.domain.models.user import User
+from app.domain.util.datetime import is_same_day
 
 
 @dataclass
@@ -16,6 +18,12 @@ class AttendanceLog:
     is_attending: bool 
     room: str
 
+    def is_todays_log(self) -> bool:
+        return is_same_day(
+            datetime.fromtimestamp(self.created_at), 
+            datetime.now()
+        )
+    
     def to_json(self):
         return {
             "user_id": self.user_id,
@@ -35,6 +43,17 @@ class AttendanceLog:
             self.room,
             self.created_at, 
         ]
+    
+    @classmethod
+    def from_csv(cls, csv: List[str]) -> AttendanceLog:
+        return AttendanceLog(
+            user_id=csv[0],
+            user_name=csv[1],
+            bluetooth_mac_address=csv[2],
+            is_attending=bool(csv[3]),
+            room=csv[4],
+            created_at=int(csv[5])
+        )
 
     @staticmethod
     def from_user(user: User, created_at: int, is_attending: bool, room: str) -> AttendanceLog:
