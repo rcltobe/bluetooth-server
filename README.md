@@ -31,3 +31,8 @@ pip3 install -r requirements.txt
 |CREDENTIAL_FILE_PATH| サービスアカウントのパス                                                                             |
 |SPREADSHEET_KEY| SpreadSheetのキー（URLのXXXとなっている部分 https://docs.google.com/spreadsheets/d/XXXXXX/edit#gid=0) |
 |DISCORD_ATTENDANCE_LOG_WEBHOOK| Discordのattending_logのWebhookURL                                                         |
+
+## テスト実行方法
+```
+python -m unittest discover test
+```
