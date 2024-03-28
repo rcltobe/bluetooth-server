@@ -30,38 +30,30 @@ class AttendanceSummary:
             "attendances": [attendance.to_json() for attendance in self.attendances],
         }
 
+    # 出席時間を取得
+    def get_attendance_time(self) -> int:
+        return sum([attendance.get_attendance_time() for attendance in self.attendances])
+    
     @staticmethod
-    def generate_summary(attendance_logs: List[AttendanceLog], day: datetime) -> List[AttendanceSummary]:
-        """
-        day で指定された日のユーザーごとの出席の集計を行う
-        """
-        user_ids = set([log.user_id for log in attendance_logs])
-        attendance_logs_of_day = [log for log in attendance_logs if is_same_day(day, datetime.fromtimestamp(log.created_at))]
-
-        summaries: List[AttendanceSummary] = []
-        for user_id in user_ids:
-            summary = AttendanceSummary._generate_summary_of_user(
-                attendance_logs=attendance_logs_of_day,
-                user_id=user_id,
-            )
-            summaries.append(summary)
-        
-        return summaries
-
-    @staticmethod
-    def _generate_summary_of_user(
-        attendance_logs: List[AttendanceLog],
+    def generate_summary(
+        attendance_logs: List[AttendanceLog], 
+        day: datetime,
         user_id: str,
-    ) -> AttendanceSummary:
+    ) -> List[AttendanceSummary]:
+        """
+        指定された日のユーザーの出席の集計を行う
+        """
         rooms = ["O502", "N501"]
         summaries = []
         for room in rooms:
             summary = AttendanceSummary._generate_summary_of_room(
                 attendance_logs=attendance_logs,
                 user_id=user_id,
+                day=day,
                 room=room,
             )
             summaries.append(summary)
+        
         return summaries[0].merge(summaries[1])
     
     @staticmethod
@@ -69,10 +61,11 @@ class AttendanceSummary:
         attendance_logs: List[AttendanceLog],
         user_id: str,
         room: str,
+        day: datetime,
     ) -> AttendanceSummary:
         attendance_logs_of_user = [
             log for log in attendance_logs 
-            if log.user_id == user_id and log.room == room
+            if log.user_id == user_id and log.room == room and is_same_day(day, datetime.fromtimestamp(log.created_at))
         ]
         attendance_logs_sorted = sorted(
             attendance_logs_of_user, 
