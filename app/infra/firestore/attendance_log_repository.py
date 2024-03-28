@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 import firebase_admin
 from firebase_admin import credentials
@@ -16,4 +17,12 @@ class FirestoreAttendanceLogRepository:
         pass
 
     async def add_attendance_logs(self, attendance_logs: List[AttendanceLog]):
-        pass
+        for log in attendance_logs:
+            self.db.collection('attendance').add({
+                'user_id': log.user_id,
+                'user_name': log.user_name,
+                'address': log.bluetooth_mac_address,
+                'created_at': datetime.fromtimestamp(log.created_at),
+                'is_attending': log.is_attending,
+                'room': log.room
+            })
