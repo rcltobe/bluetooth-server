@@ -29,7 +29,8 @@ class TestAttendanceSummary(unittest.TestCase):
                 ],
                 "expected": AttendanceSummary(
                     user_id="test",
-                    attendances=[]
+                    attendances=[],
+                    day=datetime.datetime(2024, 3, 1)
                 )
             },
             {
@@ -49,6 +50,7 @@ class TestAttendanceSummary(unittest.TestCase):
                 ],
                 "expected": AttendanceSummary(
                     user_id="test",
+                    day=datetime.datetime(2024, 3, 1),
                     attendances=[
                             Attendance(
                                 in_at=datetime.datetime(
@@ -85,6 +87,7 @@ class TestAttendanceSummary(unittest.TestCase):
                 ],
                 "expected": AttendanceSummary(
                     user_id="test",
+                    day=datetime.datetime(2024, 3, 1),
                     attendances=[
                             Attendance(
                                 in_at=datetime.datetime(
@@ -140,6 +143,7 @@ class TestAttendanceSummary(unittest.TestCase):
                 ],
                 "expected": AttendanceSummary(
                     user_id="test",
+                    day=datetime.datetime(2024, 3, 1),
                     attendances=[
                             Attendance(
                                 in_at=datetime.datetime(
@@ -202,6 +206,7 @@ class TestAttendanceSummary(unittest.TestCase):
                 ],
                 "expected": AttendanceSummary(
                         user_id="test",
+                        day=datetime.datetime(2024, 3, 1),
                         attendances=[
                             Attendance(
                                 in_at=datetime.datetime(

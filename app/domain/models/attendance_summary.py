@@ -10,6 +10,7 @@ from app.domain.util.datetime import is_same_day
 class AttendanceSummary:
     user_id: str
     attendances: List[Attendance]
+    day: datetime
 
     def merge(self, other: AttendanceSummary) -> AttendanceSummary:
         """
@@ -22,17 +23,19 @@ class AttendanceSummary:
         return AttendanceSummary(
             user_id=self.user_id,
             attendances=attendances,
+            day=self.day,
         )
      
     def to_json(self):
         return {
             "user_id": self.user_id,
             "attendances": [attendance.to_json() for attendance in self.attendances],
+            "day": self.day.timestamp(),
         }
 
     # 出席時間を取得
-    def get_attendance_time(self) -> int:
-        return sum([attendance.get_attendance_time() for attendance in self.attendances])
+    def get_attendance_time_in_sec(self) -> int:
+        return sum([attendance.get_attendance_time_in_sec() for attendance in self.attendances])
     
     @staticmethod
     def generate_summary(
@@ -103,4 +106,5 @@ class AttendanceSummary:
         return AttendanceSummary(
             user_id=user_id,
             attendances=attendances,
+            day=datetime(day.year, day.month, day.day)
         )
