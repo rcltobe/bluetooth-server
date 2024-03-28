@@ -14,7 +14,7 @@ class TestAttendanceWeeklySummary(unittest.TestCase):
             {
                 "name": "1週間の出席サマリーを作成",
                 "user_id": "test",
-                "start_day": datetime(2024, 4, 1), # 月曜日
+                "start_day": datetime(2024, 4, 1),  # 月曜日
                 "attending_logs": [
                     AttendanceLog(
                         user_id="test",
@@ -56,8 +56,10 @@ class TestAttendanceWeeklySummary(unittest.TestCase):
                             day=datetime(2024, 4, 1),
                             attendances=[
                                 Attendance(
-                                    in_at=datetime(2024, 4, 1, 12, 0, 0).timestamp(),
-                                    out_at=datetime(2024, 4, 1, 15, 0, 0).timestamp(),
+                                    in_at=datetime(
+                                        2024, 4, 1, 12, 0, 0).timestamp(),
+                                    out_at=datetime(
+                                        2024, 4, 1, 15, 0, 0).timestamp(),
                                     room="O502"
                                 ),
                             ]
@@ -67,13 +69,24 @@ class TestAttendanceWeeklySummary(unittest.TestCase):
                             day=datetime(2024, 4, 7),
                             attendances=[
                                 Attendance(
-                                    in_at=datetime(2024, 4, 7, 10, 0, 0).timestamp(),
-                                    out_at=datetime(2024, 4, 7, 12, 0, 0).timestamp(),
+                                    in_at=datetime(
+                                        2024, 4, 7, 10, 0, 0).timestamp(),
+                                    out_at=datetime(
+                                        2024, 4, 7, 12, 0, 0).timestamp(),
                                     room="O502"
                                 ),
                             ]
                         )
                     ]
+                )
+            },
+            {
+                "name": "一度も出席をしていない",
+                "user_id": "test",
+                "start_day": datetime(2024, 4, 1),  # 月曜日
+                "attending_logs": [],
+                "expected": AttendanceWeeklySummary(
+                    summaries=[]
                 )
             }
         ]
@@ -86,6 +99,6 @@ class TestAttendanceWeeklySummary(unittest.TestCase):
                     start_date=case["start_day"],
                 )
                 self.assertEqual(
-                    actual.to_json(), 
+                    actual.to_json(),
                     case["expected"].to_json()
                 )

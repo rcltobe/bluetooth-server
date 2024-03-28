@@ -18,16 +18,6 @@ class AttendanceWeeklySummary:
             ]
         }
 
-    def count_attendance_time_over(self, hour: int) -> int:
-        """
-        出席時間が指定された時間を超えている日数を取得
-        """
-        count = 0
-        for summary in self.summaries:
-            if summary.get_attendance_time_in_sec() >= hour * 60 * 60:
-                count += 1
-        return count
-
     def is_attended_at(self, weekday: int, hour: int) -> bool:
         """
         指定した曜日、時刻に出席しているかどうかを返す
