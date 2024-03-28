@@ -34,6 +34,27 @@ class AttendanceLog:
             self.created_at, 
         ]
     
+    def to_firestore_dict(self):
+        return {
+            'user_id': self.user_id,
+            'user_name': self.user_name,
+            'address': self.bluetooth_mac_address,
+            'is_attending': self.is_attending,
+            'room': self.room,
+            'created_at': datetime.fromtimestamp(self.created_at),
+        }
+    
+    @staticmethod
+    def from_firestore_dict(data: dict) -> AttendanceLog:
+        return AttendanceLog(
+            user_id=data['user_id'],
+            user_name=data['user_name'],
+            bluetooth_mac_address=data['address'],
+            is_attending=data['is_attending'],
+            room=data['room'],
+            created_at=int(data['created_at'].timestamp())
+        )
+    
     @classmethod
     def from_csv(cls, csv: List[str]) -> AttendanceLog:
         return AttendanceLog(

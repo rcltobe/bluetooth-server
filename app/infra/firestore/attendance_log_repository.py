@@ -24,24 +24,20 @@ class FirestoreAttendanceLogRepository:
         logs = []
         for doc in docs:
             data = doc.to_dict()
-            logs.append(AttendanceLog(
-                user_id=data['user_id'],
-                user_name=data['user_name'],
-                bluetooth_mac_address=data['address'],
-                is_attending=data['is_attending'],
-                room=data['room'],
-                created_at=data['created_at'].timestamp()
-            ))
-        
+            logs.append(AttendanceLog.from_firestore_dict(data))
+        return logs
+    
+    async def fetch_logs_of_day_between(self, day_start: datetime, day_end: datetime) -> List[AttendanceLog]:
+        query = self.db.collection('attendance')
+        query = query.where(filter=FieldFilter('created_at', '>=', datetime(day_start.year, day_start.month, day_start.day, 0, 0, 0)))
+        query = query.where(filter=FieldFilter('created_at', '<=', datetime(day_end.year, day_end.month, day_end.day, 23, 59, 59)))
+        docs = query.stream()
+        logs = []
+        for doc in docs:
+            data = doc.to_dict()
+            logs.append(AttendanceLog.from_firestore_dict(data))
         return logs
 
     async def add_attendance_logs(self, attendance_logs: List[AttendanceLog]):
         for log in attendance_logs:
-            self.db.collection('attendance').add({
-                'user_id': log.user_id,
-                'user_name': log.user_name,
-                'address': log.bluetooth_mac_address,
-                'is_attending': log.is_attending,
-                'room': log.room,
-                'created_at': datetime.fromtimestamp(log.created_at),
-            })
+            self.db.collection('attendance').add(log.to_firestore_dict())
