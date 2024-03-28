@@ -1,5 +1,5 @@
 import time
-import datetime
+from datetime import datetime
 import unittest
 from dataclasses import dataclass
 from typing import List, Optional
@@ -15,7 +15,7 @@ class TestAttendanceSummary(unittest.TestCase):
             {
                 "name": "未入室（退出データあり）",
                 "user_id": "test",
-                "day": datetime.datetime(2024, 3, 1),
+                "day": datetime(2024, 3, 1),
                 "attendance_logs": [
                     AttendanceLog(
                         user_id="test",
@@ -23,20 +23,20 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=False,
                         room="O502",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 12, 0, 0).timestamp(),
                     )
                 ],
                 "expected": AttendanceSummary(
                     user_id="test",
                     attendances=[],
-                    day=datetime.datetime(2024, 3, 1)
+                    day=datetime(2024, 3, 1)
                 )
             },
             {
                 "name": "入出済み 未退出",
                 "user_id": "test",
-                "day": datetime.datetime(2024, 3, 1),
+                "day": datetime(2024, 3, 1),
                 "attendance_logs": [
                     AttendanceLog(
                         user_id="test",
@@ -44,16 +44,16 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=True,
                         room="O502",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 12, 0, 0).timestamp(),
                     )
                 ],
                 "expected": AttendanceSummary(
                     user_id="test",
-                    day=datetime.datetime(2024, 3, 1),
+                    day=datetime(2024, 3, 1),
                     attendances=[
                             Attendance(
-                                in_at=datetime.datetime(
+                                in_at=datetime(
                                     2024, 3, 1, 12, 0, 0).timestamp(),
                                 out_at=None,
                                 room="O502"
@@ -64,7 +64,7 @@ class TestAttendanceSummary(unittest.TestCase):
             {
                 "name": "退出済み",
                 "user_id": "test",
-                "day": datetime.datetime(2024, 3, 1),
+                "day": datetime(2024, 3, 1),
                 "attendance_logs": [
                     AttendanceLog(
                         user_id="test",
@@ -72,7 +72,7 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=True,
                         room="O502",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 12, 0, 0).timestamp(),
                     ),
                     AttendanceLog(
@@ -81,18 +81,18 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=False,
                         room="O502",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 12, 30, 0).timestamp(),
                     )
                 ],
                 "expected": AttendanceSummary(
                     user_id="test",
-                    day=datetime.datetime(2024, 3, 1),
+                    day=datetime(2024, 3, 1),
                     attendances=[
                             Attendance(
-                                in_at=datetime.datetime(
+                                in_at=datetime(
                                     2024, 3, 1, 12, 0, 0).timestamp(),
-                                out_at=datetime.datetime(
+                                out_at=datetime(
                                     2024, 3, 1, 12, 30, 0).timestamp(),
                                 room="O502"
                             )
@@ -102,7 +102,7 @@ class TestAttendanceSummary(unittest.TestCase):
             {
                 "name": "複数の入退室",
                 "user_id": "test",
-                "day": datetime.datetime(2024, 3, 1),
+                "day": datetime(2024, 3, 1),
                 "attendance_logs": [
                     AttendanceLog(
                         user_id="test",
@@ -110,7 +110,7 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=True,
                         room="O502",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 12, 0, 0).timestamp(),
                     ),
                     AttendanceLog(
@@ -119,7 +119,7 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=False,
                         room="O502",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 12, 30, 0).timestamp(),
                     ),
                     AttendanceLog(
@@ -128,7 +128,7 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=True,
                         room="O502",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 13, 0, 0).timestamp(),
                     ),
                     AttendanceLog(
@@ -137,35 +137,35 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=False,
                         room="O502",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 13, 30, 0).timestamp(),
                     )
                 ],
                 "expected": AttendanceSummary(
                     user_id="test",
-                    day=datetime.datetime(2024, 3, 1),
+                    day=datetime(2024, 3, 1),
                     attendances=[
                             Attendance(
-                                in_at=datetime.datetime(
+                                in_at=datetime(
                                     2024, 3, 1, 12, 0, 0).timestamp(),
-                                out_at=datetime.datetime(
+                                out_at=datetime(
                                     2024, 3, 1, 12, 30, 0).timestamp(),
                                 room="O502"
                             ),
                         Attendance(
-                                in_at=datetime.datetime(
+                                in_at=datetime(
                                     2024, 3, 1, 13, 0, 0).timestamp(),
-                                out_at=datetime.datetime(
+                                out_at=datetime(
                                     2024, 3, 1, 13, 30, 0).timestamp(),
                                 room="O502"
-                            )
+                                )
                     ],
                 )
             },
             {
                 "name": "O502 と N501 で入退室",
                 "user_id": "test",
-                "day": datetime.datetime(2024, 3, 1),
+                "day": datetime(2024, 3, 1),
                 "attendance_logs": [
                     AttendanceLog(
                         user_id="test",
@@ -173,7 +173,7 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=True,
                         room="O502",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 12, 0, 0).timestamp(),
                     ),
                     AttendanceLog(
@@ -182,7 +182,7 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=False,
                         room="O502",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 12, 30, 0).timestamp(),
                     ),
                     AttendanceLog(
@@ -191,7 +191,7 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=True,
                         room="N501",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 13, 0, 0).timestamp(),
                     ),
                     AttendanceLog(
@@ -200,30 +200,30 @@ class TestAttendanceSummary(unittest.TestCase):
                         bluetooth_mac_address="00:00:00:00",
                         is_attending=False,
                         room="N501",
-                        created_at=datetime.datetime(
+                        created_at=datetime(
                             2024, 3, 1, 13, 30, 0).timestamp(),
                     )
                 ],
                 "expected": AttendanceSummary(
-                        user_id="test",
-                        day=datetime.datetime(2024, 3, 1),
-                        attendances=[
+                    user_id="test",
+                    day=datetime(2024, 3, 1),
+                    attendances=[
                             Attendance(
-                                in_at=datetime.datetime(
+                                in_at=datetime(
                                     2024, 3, 1, 12, 0, 0).timestamp(),
-                                out_at=datetime.datetime(
+                                out_at=datetime(
                                     2024, 3, 1, 12, 30, 0).timestamp(),
                                 room="O502"
                             ),
-                            Attendance(
-                                in_at=datetime.datetime(
+                        Attendance(
+                                in_at=datetime(
                                     2024, 3, 1, 13, 0, 0).timestamp(),
-                                out_at=datetime.datetime(
+                                out_at=datetime(
                                     2024, 3, 1, 13, 30, 0).timestamp(),
                                 room="N501"
                             )
-                        ],
-                    )
+                    ],
+                )
             },
         ]
 
@@ -237,4 +237,49 @@ class TestAttendanceSummary(unittest.TestCase):
                 self.assertEqual(
                     actual.to_json(),
                     case["expected"].to_json()
+                )
+
+    def test_get_attendance_time_in_sec(self):
+        cases = [
+            {
+                "name": "出席時間が0秒",
+                "user_id": "test",
+                "day": datetime(2024, 3, 1),
+                "attendance_summary": AttendanceSummary(
+                    user_id="test",
+                    day=datetime(2024, 3, 1),
+                    attendances=[]
+                ),
+                "expected": 0
+            },
+            {
+                "name": "2回出席",
+                "user_id": "test",
+                "day": datetime(2024, 3, 1),
+                "attendance_summary": AttendanceSummary(
+                    user_id="test",
+                    day=datetime(2024, 3, 1),
+                    attendances=[
+                        Attendance(
+                            in_at=datetime(2024, 3, 1, 12, 0, 0).timestamp(),
+                            out_at=datetime(2024, 3, 1, 12, 30, 0).timestamp(),
+                            room="O502"
+                        ),
+                        Attendance(
+                            in_at=datetime(2024, 3, 1, 13, 0, 0).timestamp(),
+                            out_at=datetime(2024, 3, 1, 13, 30, 0).timestamp(),
+                            room="O502"
+                        )
+                    ]
+                ),
+                "expected": 3600
+            }
+        ]
+
+        for case in cases:
+            with self.subTest(name=case["name"]):
+                actual = case["attendance_summary"].get_attendance_time_in_sec()
+                self.assertEqual(
+                    actual,
+                    case["expected"]
                 )
