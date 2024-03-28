@@ -26,6 +26,7 @@ class TestAttendanceLog(unittest.TestCase):
                 expect=AttendanceLog.from_user(
                     user=test_user,
                     created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 12, 0, 0)),
+                    room="O501",
                     is_attending=True,
                 )
             ),
@@ -38,12 +39,14 @@ class TestAttendanceLog(unittest.TestCase):
                     AttendanceLog.from_user(
                         user=test_user,
                         is_attending=True,
+                        room="O501",
                         created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 12, 0, 0)),
                     ),
                 ],
                 expect=AttendanceLog.from_user(
                     user=test_user,
                     is_attending=False,
+                    room="O501",
                     created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 15, 0, 0)),
                 )
             ),
@@ -56,22 +59,26 @@ class TestAttendanceLog(unittest.TestCase):
                     AttendanceLog.from_user(
                         user=test_user, 
                         created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 12, 0, 0)), 
+                        room="O501",
                         is_attending=True,
                     ),
                     AttendanceLog.from_user(
                         user=test_user, 
                         created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 15, 0, 0)),
+                        room="O501",
                         is_attending=False,
                     ),
                     AttendanceLog.from_user(
                         user=test_user, 
                         created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 16, 0, 0)),
+                        room="O501",
                         is_attending=False,
                     ),
                 ],
                 expect=AttendanceLog.from_user(
                     user=test_user, 
                     created_at=_timestamp_from_datetime(datetime.datetime(2024, 3, 1, 17, 0, 0)),
+                    room="O501",
                     is_attending=True,
                 )
             ),
@@ -90,6 +97,7 @@ class TestAttendanceLog(unittest.TestCase):
                 prev_attendance_logs=case.prev_attendance_logs,
                 user=case.user,
                 is_found=case.is_found,
+                room="O501",
                 now=case.now,
             )
 
