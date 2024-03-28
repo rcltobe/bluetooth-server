@@ -6,3 +6,4 @@ gspread_asyncio
 oauth2client
 python-dotenv
 requests==2.28.2
+firebase-admin
