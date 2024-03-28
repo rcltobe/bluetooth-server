@@ -6,7 +6,7 @@ import os
 
 from app.domain.service.device import DeviceService
 from app.domain.util.datetime import datetime_now, is_same_day
-from app.infra.spreadsheet.attendance_log_repository import SpreadSheetAttendanceLogRepository
+from app.infra.firestore.attendance_log_repository import FirestoreAttendanceLogRepository
 
 
 class BluetoothLogTask:
@@ -25,16 +25,12 @@ class BluetoothLogTask:
 
     def __init__(self):
         self.last_archived_at: Optional[datetime] = None
-        self.attendance_log_repository = SpreadSheetAttendanceLogRepository()
+        self.attendance_log_repository = FirestoreAttendanceLogRepository()
         self.service = DeviceService()
 
     async def run(self):
         while True:
             await self._scan_devices(self.INTERVAL_SCAN, room=os.environ.get("ROOM"))
-
-            if not await self._did_archived_today():
-                await self.attendance_log_repository.archive_logs()
-                self.last_archived_at = datetime_now()
 
     async def _scan_devices(self, interval: int, room: str):
         logging.info("START SCAN")
@@ -53,11 +49,3 @@ class BluetoothLogTask:
         if end - start < interval:
             duration = end - start
             time.sleep(interval - duration)
-
-    async def _did_archived_today(self):
-        if self.last_archived_at is None:
-            return False
-
-        now = datetime_now()
-        is_archived_today = is_same_day(now, self.last_archived_at)
-        return is_archived_today

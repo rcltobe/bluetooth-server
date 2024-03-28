@@ -6,12 +6,12 @@ from collections import defaultdict
 from app.domain.models.attendance_log import AttendanceLog
 from app.domain.util.datetime import datetime_now, datetime_today, is_same_day
 from app.infra.discord.discord_client import DiscordClient
-from app.infra.spreadsheet.attendance_log_repository import SpreadSheetAttendanceLogRepository
+from app.infra.firestore.attendance_log_repository import FirestoreAttendanceLogRepository
 from app.infra.spreadsheet.user_repository import SpreadSheetUserRepository
 
 
 class AttendanceLogInDay:
-    _attendance_log_repository = SpreadSheetAttendanceLogRepository()
+    _attendance_log_repository = FirestoreAttendanceLogRepository()
     _user_repository = SpreadSheetUserRepository()
 
     # 一日を通して、通知したかどうかだけを確認するためのデータ
@@ -36,7 +36,7 @@ class AttendanceLogInDay:
         self._remove_logs_before_today()
 
         # 出席ログを取得
-        attendance_logs_today = await self._attendance_log_repository.fetch_logs_of_today()
+        attendance_logs_today = await self._attendance_log_repository.fetch_logs_of_day(day=datetime_today())
         attendance_logs_today_of_room = [log for log in attendance_logs_today if log.room == room]
 
         # ユーザーごとにログを分ける 
