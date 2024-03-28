@@ -17,6 +17,40 @@ class AttendanceWeeklySummary:
                 summary.to_json() for summary in self.summaries
             ]
         }
+    
+    def to_csv(self, start_date: datetime, duration: int):
+        """
+        CSV形式に変換する
+        """
+        csv = []
+
+        # 曜日ごとの出席時間を追加
+        for i in range(0, duration):
+            day = start_date + timedelta(days=i)
+            summary_of_day = next(
+                (summary for summary in self.summaries if summary.day == day),
+                None
+            )
+            if summary_of_day is None:
+                csv.append(0)
+                continue
+                
+            csv.append(summary_of_day.get_attendance_time_in_sec())
+
+        # 火曜日の出席時間を追加
+        summary_of_tuesday = next(
+            (summary for summary in self.summaries if summary.day.weekday() == 1),
+            None
+        )
+        if summary_of_tuesday is None or len(summary_of_tuesday.attendances) == 0:
+            csv.extend([None, None])
+        else:
+            csv.extend([
+                summary_of_tuesday.attendances[0].get_in_at_datetime().hour,
+                summary_of_tuesday.attendances[0].get_in_at_datetime().minute,
+            ])
+    
+        return csv
 
     def is_attended_at(self, weekday: int, hour: int) -> bool:
         """
@@ -32,6 +66,20 @@ class AttendanceWeeklySummary:
                 if attendance_hour <= hour:
                     return True
         return False
+    
+    @staticmethod
+    def csv_header():
+        return [
+            "月",
+            "火",
+            "水",
+            "木",
+            "金",
+            "土",
+            "日",
+            "火曜日の登校時間（時）",
+            "火曜日の登校時間（分）",
+        ]
 
     @staticmethod
     def generate_weekly_summary(
